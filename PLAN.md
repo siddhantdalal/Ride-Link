@@ -123,6 +123,17 @@ Test phone: OnePlus 7 (GM1901), Android 12 (API 31), Google Maps 26.40. This Map
 
 The background service, receiver, destination handling, Maps launcher, status screen and Maps helper. The helper handles the mid-ride "Exit navigation?" confirmation and Stop Ride.
 
+#### Phase 1 results on the OnePlus 7 (2026-11-13)
+
+- ✅ **Listener and bike code:** a wrong code gets a 401 and the right code a 200. The code works with or without the dash, in any letter case.
+- ✅ **Navigating from the background** (home screen, Bike Link not open) works once "Display over other apps" is allowed. Without it, Android blocks the launch (`Abort background activity starts`), so the iPhone now gets a "finish setup" reply instead of a false "Navigating".
+- ✅ **Switching mid-ride:** the helper answers "Yes", and Maps reroutes (701 km → 837 km).
+  - The first attempt failed: putting even an invisible screen over a navigating Maps pushed Maps into **picture-in-picture**. Fixed by opening Maps directly when the screen is on.
+- ✅ **Stop Ride:** the helper taps "Close navigation". It now taps again until navigation has actually ended.
+- ⚠️ **OnePlus blocks Bike Link from starting itself** at boot and after updates (`OplusAppStartupManager`). Worked around: Android itself always starts the Maps helper, and the helper starts the listener.
+- ❌ **OnePlus freezes Bike Link when the screen is off** (process in `freezer:/frozen`), even with a foreground service and the battery exemption. Commands sent while the screen is off wait until the screen comes back on. Next step: test OnePlus's own per-app "Allow background activity" setting. If that doesn't help, keep the bike phone's screen on while it's charging.
+- Note: at home the phone switched to the home Wi-Fi, which takes it off the iPhone hotspot. On the bike that Wi-Fi is out of range, but it explains "not on the iPhone hotspot" at home.
+
 ### Phase 2: iPhone Shortcuts and pairing
 
 All five Shortcuts, the pairing code, and the spoken and on-screen confirmations.
