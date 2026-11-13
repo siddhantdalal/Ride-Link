@@ -45,8 +45,8 @@
 
         <ImageButton
             android:id="@+id/music_previous"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="@drawable/bg_round_button"
             android:backgroundTint="@color/surface_raised"
             android:contentDescription="@string/previous_track"
@@ -61,8 +61,8 @@
 
         <ImageButton
             android:id="@+id/music_play"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:background="@drawable/bg_round_button"
             android:backgroundTint="@color/tile_music"
             android:contentDescription="@string/play_pause"
@@ -77,8 +77,8 @@
 
         <ImageButton
             android:id="@+id/music_next"
-            android:layout_width="52dp"
-            android:layout_height="52dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="@drawable/bg_round_button"
             android:backgroundTint="@color/surface_raised"
             android:contentDescription="@string/next_track"
