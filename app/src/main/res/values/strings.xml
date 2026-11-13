@@ -92,6 +92,13 @@
     <string name="setup_intro">A few one-time permissions, so your iPhone can start rides on this phone.</string>
     <string name="setup_summary">Done: %1$d / %2$d</string>
     <string name="close">Close</string>
+    <string name="bike_address">Bike phone\'s address: %1$s</string>
+    <string name="bike_address_unknown">Join your iPhone\'s hotspot to see this phone\'s address.</string>
+    <string name="about_licences">About &amp; licences</string>
+    <string name="about_title">Bike Link</string>
+    <string name="about_text">Version %1$s\n\nNavigation and maps by Google (Google Maps Platform Navigation SDK). Map data ©Google. Use is subject to the Google Maps Platform Terms of Service.\n\nTypeface: Space Grotesk, SIL Open Font License 1.1.\nIcons: Material Symbols by Google, Apache License 2.0.</string>
+    <string name="about_font_licence">Font licence</string>
+    <string name="about_icon_licence">Icon licence</string>
     <string name="step_allow">Allow</string>
     <string name="step_turn_on">Turn on</string>
     <string name="step_done_description">Done</string>

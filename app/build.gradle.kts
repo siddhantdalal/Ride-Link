@@ -32,6 +32,11 @@ android {
         }
     }
 
+    buildFeatures {
+        // For the version shown in About & licences.
+        buildConfig = true
+    }
+
     lint {
         // AppCompat and the KTX extensions only arrive as part of the Navigation SDK. Bike Link's own screens use
         // framework views and themes, whose tint and drawable APIs work on every Android version the app supports (8+),

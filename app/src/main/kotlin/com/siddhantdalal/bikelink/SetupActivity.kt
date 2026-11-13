@@ -1,6 +1,7 @@
 package com.siddhantdalal.bikelink
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -23,6 +24,7 @@ class SetupActivity : Activity() {
         stepList = findViewById(R.id.setup_steps)
         findViewById<TextView>(R.id.bike_code).text = BikeCode.formatted(BikeCode.get(this))
         findViewById<View>(R.id.close).setOnClickListener { finish() }
+        findViewById<View>(R.id.about).setOnClickListener { showAbout() }
     }
 
     override fun onResume() {
@@ -43,10 +45,34 @@ class SetupActivity : Activity() {
     }
 
     private fun render() {
+        // The iPhone Shortcuts ask for this address when they're imported.
+        findViewById<TextView>(R.id.bike_address).text = HotspotLink.localAddress()
+            ?.takeIf(HotspotLink::isIphoneHotspot)
+            ?.let { getString(R.string.bike_address, it) }
+            ?: getString(R.string.bike_address_unknown)
         val steps = SetupChecklist(this).steps()
         summary.text = getString(R.string.setup_summary, steps.count { it.done }, steps.size)
         stepList.removeAllViews()
         steps.forEachIndexed { index, step -> stepList.addView(stepRow(index + 1, step)) }
+    }
+
+    /** Credits and licences: Google's navigation (its terms ask for attribution), the typeface and the icons. */
+    private fun showAbout() {
+        AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+            .setTitle(R.string.about_title)
+            .setMessage(getString(R.string.about_text, BuildConfig.VERSION_NAME))
+            .setPositiveButton(R.string.ok, null)
+            .setNeutralButton(R.string.about_font_licence) { _, _ -> showLicence("licenses/space_grotesk_OFL.txt") }
+            .setNegativeButton(R.string.about_icon_licence) { _, _ -> showLicence("licenses/material_symbols_LICENSE.txt") }
+            .show()
+    }
+
+    private fun showLicence(asset: String) {
+        val licence = assets.open(asset).bufferedReader().use { it.readText() }
+        AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert)
+            .setMessage(licence)
+            .setPositiveButton(R.string.ok, null)
+            .show()
     }
 
     private fun stepRow(number: Int, step: SetupChecklist.Step): View {
