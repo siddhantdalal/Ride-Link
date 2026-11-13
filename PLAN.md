@@ -2,6 +2,21 @@
 
 Working name. The folder is called `CarPlay`, but CarPlay was ruled out because it only gives car routes and needs Apple-licensed hardware.
 
+## Direction update (2026-11-13): a CarPlay-style app with built-in navigation (option B)
+
+Bike Link is growing into a full-screen, CarPlay-style ride dashboard on the bike phone.
+
+- **Navigation built in:** Google's Navigation SDK for Android, two-wheeler mode (`TravelMode.TWO_WHEELER`), instead of handing off to the Google Maps app. This removes the Maps helper workarounds, the picture-in-picture problem and the background-launch rules.
+- **Cost:**
+  - Google bills per destination under the "Navigation Request (India)" SKU: 7,000 free a month, resetting monthly. Guidance and rerouting aren't billed.
+  - Billing has to be turned on even inside the free amount.
+  - A daily quota limit keeps usage below the free amount.
+  - Source: https://developers.google.com/maps/billing-and-pricing/pricing-india
+- **iPhone link over Bluetooth LE:** Apple Notification Center Service (calls with Accept/Decline, message alerts) and Apple Media Service (now playing, controls). This is the riskiest part, so it gets tested first.
+- **Internet:** still needed for navigation. It comes from the iPhone's Personal Hotspot, over Bluetooth (preferred, to be tested) or Wi-Fi, or from a data SIM in the bike phone.
+- **Can't be done** (Apple doesn't share these): showing iPhone apps, placing calls or replying to messages from the bike screen (Siri covers those), and album art.
+- **The current UI redesign** (instrument-cluster gauge, Space Grotesk font) becomes the dashboard's home screen.
+
 ## Goal
 
 You get on the motorbike and choose where to go from your iPhone, or by voice through the helmet intercom. The Android phone on the holder opens Google Maps with two-wheeler routes. You never touch the Android phone.
