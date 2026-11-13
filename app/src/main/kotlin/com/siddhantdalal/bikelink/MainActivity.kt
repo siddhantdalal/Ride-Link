@@ -1,74 +1,73 @@
 package com.siddhantdalal.bikelink
 
-import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
-import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import android.net.Uri
 import android.os.BatteryManager
-import android.os.Build
 import android.os.Bundle
-import android.os.PowerManager
-import android.provider.Settings
 import android.text.format.DateUtils
 import android.view.View
 import android.view.WindowManager
-import android.widget.Button
-import android.widget.LinearLayout
+import android.widget.ImageView
 import android.widget.TextView
-import java.net.Inet4Address
-import java.net.NetworkInterface
-import java.text.NumberFormat
+import android.widget.Toast
 
 /**
- * The only screen: whether the bike is ready to ride, the last ride, the bike code, and one-time setup.
+ * The dashboard, Bike Link's home screen: the clock, the iPhone link, a speedometer-style status gauge, and large
+ * tiles for Navigate, Music, Calls and Setup.
  *
  * The real work happens in [BikeLinkService]. This screen reflects it live: it updates when Wi-Fi changes, when a
- * command arrives from the iPhone, and when setup steps are completed. Once the required steps are done, setup
- * folds away behind the button in the top bar.
+ * command arrives from the iPhone, and when setup steps are completed.
  */
 class MainActivity : Activity() {
 
-    private class SetupStep(
-        val title: Int,
-        val detail: Int,
-        val done: Boolean,
-        val required: Boolean,
-        val fix: () -> Unit,
-    )
-
-    private enum class Status(val colorRes: Int, val pulsing: Boolean) {
-        IDLE(R.color.status_idle, false),
-        WARNING(R.color.status_warning, false),
-        READY(R.color.status_ready, true),
+    private enum class Status(
+        val color: Int,
+        val progress: Float,
+        val breathing: Boolean,
+        val word: Int,
+        val caption: Int,
+    ) {
+        STARTING(R.color.status_idle, 0.12f, false, R.string.status_word_starting, R.string.status_caption_starting),
+        SETUP(R.color.status_warning, 0.35f, false, R.string.status_word_setup, R.string.status_caption_setup),
+        HOTSPOT(R.color.status_warning, 0.62f, false, R.string.status_word_hotspot, R.string.status_caption_hotspot),
+        READY(R.color.status_ready, 1f, true, R.string.status_word_ready, R.string.status_caption_ready),
     }
 
-    private lateinit var statusRing: StatusRingView
-    private lateinit var statusTitle: TextView
+    private class Tile(root: View) {
+        val title: TextView = root.findViewById(R.id.tile_title)
+        val subtitle: TextView = root.findViewById(R.id.tile_subtitle)
+        val icon: ImageView = root.findViewById(R.id.tile_icon)
+        val iconChip: View = root.findViewById(R.id.tile_icon_chip)
+    }
+
+    private lateinit var gauge: RideGaugeView
+    private lateinit var gaugeGlow: View
+    private lateinit var gaugeCenter: View
+    private lateinit var statusWord: TextView
+    private lateinit var statusCaption: TextView
     private lateinit var statusDetail: TextView
-    private lateinit var lastRideTitle: TextView
-    private lateinit var lastRideDetail: TextView
-    private lateinit var setupToggle: Button
-    private lateinit var setupSection: View
-    private lateinit var setupSummary: TextView
-    private lateinit var setupSteps: LinearLayout
+    private lateinit var linkDot: View
+    private lateinit var linkLabel: TextView
+    private lateinit var navigateTile: Tile
+    private lateinit var setupTile: Tile
 
-    /** Whether the rider opened the setup list after it folded away. */
-    private var setupExpanded = false
-
+    private var shownStatus: Status? = null
+    private var glowColor: Int? = null
+    private var glowRadius = 0f
     private val render = Runnable { render() }
 
-    /** While plugged in (on the bike), keep the screen on so the status stays visible. */
+    /** While plugged in (on the bike), keep the screen on so the dashboard stays visible. */
     private val powerReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) = keepScreenOnWhileCharging(intent)
     }
@@ -84,19 +83,27 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        statusRing = findViewById(R.id.status_ring)
-        statusTitle = findViewById(R.id.status_title)
+        gauge = findViewById(R.id.gauge)
+        gaugeGlow = findViewById(R.id.gauge_glow)
+        gaugeCenter = findViewById(R.id.gauge_center)
+        statusWord = findViewById(R.id.status_word)
+        statusCaption = findViewById(R.id.status_caption)
         statusDetail = findViewById(R.id.status_detail)
-        lastRideTitle = findViewById(R.id.last_ride_title)
-        lastRideDetail = findViewById(R.id.last_ride_detail)
-        setupToggle = findViewById(R.id.setup_toggle)
-        setupSection = findViewById(R.id.setup_section)
-        setupSummary = findViewById(R.id.setup_summary)
-        setupSteps = findViewById(R.id.setup_steps)
-        findViewById<TextView>(R.id.bike_code).text = BikeCode.formatted(BikeCode.get(this))
-        setupToggle.setOnClickListener {
-            setupExpanded = !setupExpanded
-            render()
+        linkDot = findViewById(R.id.link_dot)
+        linkLabel = findViewById(R.id.link_label)
+
+        navigateTile = tile(R.id.tile_navigate, R.drawable.ic_navigation, R.color.tile_navigate, R.string.tile_navigate) {
+            RideActivity.startPreview(this)
+        }
+        tile(R.id.tile_music, R.drawable.ic_music_note, R.color.tile_music, R.string.tile_music, ::comingWithBluetooth)
+            .subtitle.setText(R.string.tile_bluetooth_next)
+        tile(R.id.tile_calls, R.drawable.ic_call, R.color.tile_calls, R.string.tile_calls, ::comingWithBluetooth)
+            .subtitle.setText(R.string.tile_bluetooth_next)
+        setupTile = tile(R.id.tile_setup, R.drawable.ic_settings, R.color.tile_setup, R.string.tile_setup, ::openSetup)
+
+        findViewById<View>(R.id.gauge_frame).apply {
+            setOnClickListener { if (shownStatus == Status.SETUP) openSetup() }
+            addOnLayoutChangeListener { frame, _, _, _, _, _, _, _, _ -> fitGauge(frame.width, frame.height) }
         }
     }
 
@@ -105,7 +112,7 @@ class MainActivity : Activity() {
         BikeLinkService.start(this)
         render()
         // The service starts asynchronously, so check again once it has had a moment to start.
-        statusTitle.postDelayed(render, STATUS_RECHECK_MS)
+        gauge.postDelayed(render, STATUS_RECHECK_MS)
         registerReceiver(powerReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))?.let(::keepScreenOnWhileCharging)
         RideLog.prefs(this).registerOnSharedPreferenceChangeListener(rideLogListener)
         val wifi = NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build()
@@ -113,160 +120,122 @@ class MainActivity : Activity() {
     }
 
     override fun onPause() {
-        statusTitle.removeCallbacks(render)
+        gauge.removeCallbacks(render)
         unregisterReceiver(powerReceiver)
         RideLog.prefs(this).unregisterOnSharedPreferenceChangeListener(rideLogListener)
         getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(wifiCallback)
         super.onPause()
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        render()
-    }
-
     /** Network callbacks arrive on a background thread. */
     private fun renderSoon() {
-        statusTitle.post(render)
+        gauge.post(render)
     }
 
     private fun render() {
-        val steps = setupSteps()
-        val requiredDone = steps.filter { it.required }.all { it.done }
-        renderStatus(requiredDone)
-        renderLastRide()
-        renderSetup(steps, requiredDone)
+        val steps = SetupChecklist(this).steps()
+        val missing = steps.count { it.required && !it.done }
+        renderStatus(setupDone = missing == 0)
+        renderNavigateTile()
+        renderSetupTile(missing)
     }
 
-    private fun renderStatus(requiredDone: Boolean) {
-        val address = wifiAddress()
-        when {
-            !BikeLinkService.isRunning ->
-                showStatus(Status.IDLE, getString(R.string.status_starting_title), getString(R.string.status_starting_detail))
-            !requiredDone ->
-                showStatus(Status.WARNING, getString(R.string.status_setup_title), getString(R.string.status_setup_detail))
-            address == null ->
-                showStatus(Status.WARNING, getString(R.string.status_no_wifi_title), getString(R.string.status_no_wifi_detail))
-            !address.startsWith(IPHONE_HOTSPOT_PREFIX) ->
-                showStatus(
-                    Status.WARNING,
-                    getString(R.string.status_other_network_title),
-                    getString(R.string.status_other_network_detail, address),
-                )
-            else ->
-                showStatus(Status.READY, getString(R.string.status_ready_title), getString(R.string.status_ready_detail, address))
+    private fun renderStatus(setupDone: Boolean) {
+        val address = HotspotLink.localAddress()
+        val onHotspot = address != null && HotspotLink.isIphoneHotspot(address)
+        val status = when {
+            !BikeLinkService.isRunning -> Status.STARTING
+            !setupDone -> Status.SETUP
+            !onHotspot -> Status.HOTSPOT
+            else -> Status.READY
         }
+        val color = getColor(status.color)
+        gauge.setState(color, status.progress, status.breathing)
+        if (status != shownStatus) {
+            shownStatus = status
+            glowColor = color
+            applyGlow()
+        }
+        statusWord.setText(status.word)
+        statusCaption.setText(status.caption)
+        statusDetail.text = when (status) {
+            Status.STARTING -> getString(R.string.status_detail_starting)
+            Status.SETUP -> getString(R.string.status_detail_setup)
+            Status.HOTSPOT -> address?.let { getString(R.string.status_detail_other_wifi, it) }
+                ?: getString(R.string.status_detail_no_wifi)
+            Status.READY -> getString(R.string.status_detail_ready, address)
+        }
+
+        linkDot.background.mutate().setTint(getColor(if (onHotspot) R.color.status_ready else R.color.status_warning))
+        linkLabel.setText(if (onHotspot) R.string.link_ready else R.string.link_missing)
     }
 
-    private fun showStatus(status: Status, title: String, detail: String) {
-        statusRing.color = getColor(status.colorRes)
-        statusRing.pulsing = status.pulsing
-        statusTitle.text = title
-        statusDetail.text = detail
-    }
-
-    private fun renderLastRide() {
+    private fun renderNavigateTile() {
         val last = RideLog.last(this)
-        when {
-            last == null -> {
-                lastRideTitle.setText(R.string.last_ride_none_title)
-                lastRideDetail.setText(R.string.last_ride_none_detail)
-            }
-            last.destination == null -> {
-                lastRideTitle.setText(R.string.last_ride_stopped_title)
-                lastRideDetail.text = formatTime(last.at)
-            }
-            else -> {
-                lastRideTitle.text = last.destination
-                lastRideDetail.text = getString(R.string.last_ride_navigating_detail, formatTime(last.at))
-            }
+        navigateTile.subtitle.text = when {
+            last == null -> getString(R.string.tile_navigate_none)
+            last.destination == null -> getString(R.string.tile_navigate_stopped, DateUtils.getRelativeTimeSpanString(last.at))
+            else -> getString(R.string.tile_navigate_last, last.destination)
         }
     }
 
-    private fun renderSetup(steps: List<SetupStep>, requiredDone: Boolean) {
-        // Setup stays open until everything required is done. After that it folds away behind the top-bar button.
-        val shown = !requiredDone || setupExpanded
-        setupSection.visibility = if (shown) View.VISIBLE else View.GONE
-        setupToggle.visibility = if (requiredDone) View.VISIBLE else View.GONE
-        setupToggle.setText(if (shown) R.string.setup_hide else R.string.setup_show)
-        setupSummary.text = getString(R.string.setup_summary, steps.count { it.done }, steps.size)
-        setupSteps.removeAllViews()
-        steps.forEachIndexed { index, step -> setupSteps.addView(stepRow(index + 1, step)) }
-    }
-
-    private fun setupSteps(): List<SetupStep> = buildList {
-        add(SetupStep(R.string.step_overlay, R.string.step_overlay_detail, Settings.canDrawOverlays(this@MainActivity), required = true) {
-            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, packageUri()))
-        })
-        val power = getSystemService(PowerManager::class.java)
-        add(SetupStep(R.string.step_battery, R.string.step_battery_detail, power.isIgnoringBatteryOptimizations(packageName), required = true) {
-            requestBatteryExemption()
-        })
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            add(permissionStep(Manifest.permission.POST_NOTIFICATIONS, R.string.step_notifications, R.string.step_notifications_detail, required = false))
-        }
-        if (Build.VERSION.SDK_INT >= ANDROID_17) {
-            add(permissionStep(ACCESS_LOCAL_NETWORK, R.string.step_local_network, R.string.step_local_network_detail, required = true))
-        }
-        val helperDetail = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            R.string.step_helper_detail_restricted
+    private fun renderSetupTile(missing: Int) {
+        if (missing == 0) {
+            setupTile.subtitle.setText(R.string.tile_setup_done)
+            setupTile.subtitle.setTextColor(getColor(R.color.text_secondary))
         } else {
-            R.string.step_helper_detail
+            setupTile.subtitle.text = resources.getQuantityString(R.plurals.tile_setup_left, missing, missing)
+            setupTile.subtitle.setTextColor(getColor(R.color.status_warning))
         }
-        add(SetupStep(R.string.step_helper, helperDetail, MapsHelperService.isEnabled, required = false) {
-            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-        })
     }
 
-    // Deliberate: the app must keep listening during rides, which is the use case this exemption exists for. The app
-    // is installed directly rather than from the Play Store, so the Play policy this lint check enforces doesn't apply.
-    @SuppressLint("BatteryLife")
-    private fun requestBatteryExemption() {
-        startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, packageUri()))
+    private fun tile(id: Int, icon: Int, color: Int, title: Int, onClick: () -> Unit): Tile {
+        val root = findViewById<View>(id)
+        val tint = getColor(color)
+        return Tile(root).apply {
+            this.title.setText(title)
+            this.icon.setImageResource(icon)
+            this.icon.setColorFilter(tint)
+            iconChip.background.mutate().setTint(tint.withAlpha(0.16f))
+            root.setOnClickListener { onClick() }
+        }
     }
 
-    private fun permissionStep(permission: String, title: Int, detail: Int, required: Boolean) =
-        SetupStep(title, detail, checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED, required) {
-            requestPermissions(arrayOf(permission), 0)
+    /**
+     * The gauge is as big as its space allows: large in portrait, smaller in landscape. The motorbike and status word
+     * scale with it so they always sit inside the ring of tick marks, and the glow is sized to fade out before the
+     * gauge's edges, so it's never cut off.
+     */
+    private fun fitGauge(width: Int, height: Int) {
+        val dp = resources.displayMetrics.density
+        val size = minOf(width, height)
+        val innerRadius = size / 2f - GAUGE_EDGE_DP * dp
+        val scale = (innerRadius / (CENTER_HALF_WIDTH_DP * dp)).coerceIn(MIN_CENTER_SCALE, 1f)
+        gaugeCenter.scaleX = scale
+        gaugeCenter.scaleY = scale
+        if (size / 2f != glowRadius) {
+            glowRadius = size / 2f
+            applyGlow()
         }
-
-    private fun stepRow(number: Int, step: SetupStep): View {
-        val row = layoutInflater.inflate(R.layout.setup_step, setupSteps, false)
-        val localizedNumber = NumberFormat.getIntegerInstance().format(number)
-        row.findViewById<TextView>(R.id.step_badge).apply {
-            when {
-                step.done -> {
-                    text = "✓"
-                    contentDescription = getString(R.string.step_done_description)
-                    setTextColor(getColor(R.color.on_accent))
-                    setBackgroundResource(R.drawable.bg_badge_done)
-                }
-                step.required -> {
-                    text = localizedNumber
-                    setTextColor(getColor(R.color.status_warning))
-                    setBackgroundResource(R.drawable.bg_badge_required)
-                }
-                else -> {
-                    text = localizedNumber
-                    setTextColor(getColor(R.color.text_secondary))
-                    setBackgroundResource(R.drawable.bg_badge_optional)
-                }
-            }
-        }
-        row.findViewById<TextView>(R.id.step_title).setText(step.title)
-        row.findViewById<TextView>(R.id.step_detail).setText(step.detail)
-        row.findViewById<Button>(R.id.step_action).apply {
-            visibility = if (step.done) View.GONE else View.VISIBLE
-            setText(if (step.required) R.string.step_allow else R.string.step_turn_on)
-            setOnClickListener { step.fix() }
-        }
-        return row
     }
 
-    private fun formatTime(millis: Long): String {
-        val flags = DateUtils.FORMAT_SHOW_TIME or
-            if (DateUtils.isToday(millis)) 0 else DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH
-        return DateUtils.formatDateTime(this, millis, flags)
+    /** A soft radial glow in the status colour, behind the gauge. */
+    private fun applyGlow() {
+        val color = glowColor ?: return
+        if (glowRadius <= 0f) return
+        gaugeGlow.background = GradientDrawable().apply {
+            gradientType = GradientDrawable.RADIAL_GRADIENT
+            gradientRadius = glowRadius
+            colors = intArrayOf(color.withAlpha(0.20f), Color.TRANSPARENT)
+        }
+    }
+
+    private fun openSetup() {
+        startActivity(Intent(this, SetupActivity::class.java))
+    }
+
+    private fun comingWithBluetooth() {
+        Toast.makeText(this, R.string.coming_with_bluetooth, Toast.LENGTH_SHORT).show()
     }
 
     private fun keepScreenOnWhileCharging(batteryStatus: Intent) {
@@ -278,22 +247,14 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun packageUri() = Uri.parse("package:$packageName")
-
-    /** The phone's IPv4 address on Wi-Fi (or Bluetooth tethering), e.g. 172.20.10.3. */
-    private fun wifiAddress(): String? =
-        NetworkInterface.getNetworkInterfaces()?.toList().orEmpty()
-            .filter { it.isUp && (it.name.startsWith("wlan") || it.name == "bt-pan") }
-            .flatMap { it.inetAddresses.toList() }
-            .filterIsInstance<Inet4Address>()
-            .firstOrNull()
-            ?.hostAddress
-
     private companion object {
-        // An iPhone's Personal Hotspot always gives out addresses in 172.20.10.0/28.
-        const val IPHONE_HOTSPOT_PREFIX = "172.20.10."
         const val STATUS_RECHECK_MS = 1_000L
-        const val ANDROID_17 = 37
-        const val ACCESS_LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
+
+        // From the gauge's edge to just inside its tick marks: glow room + tick inset + tick length + a margin.
+        const val GAUGE_EDGE_DP = 60f
+
+        // Half the width of the status word's box (170dp), the widest part of the centre group.
+        const val CENTER_HALF_WIDTH_DP = 85f
+        const val MIN_CENTER_SCALE = 0.5f
     }
 }

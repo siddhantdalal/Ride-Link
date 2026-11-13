@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ride block: what's playing on the iPhone. The controls are glove-sized (64dp skips, 76dp play/pause) and spread
+     across the full width, so one can't be hit by mistake for another. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/music_card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_card"
+    android:orientation="vertical"
+    android:paddingHorizontal="18dp"
+    android:paddingVertical="14dp">
+
+    <TextView
+        android:id="@+id/music_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableStart="@drawable/ic_music_note"
+        android:drawablePadding="8dp"
+        android:drawableTint="@color/tile_music"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center_vertical"
+        android:singleLine="true"
+        android:textColor="@color/text_primary"
+        android:textSize="17sp" />
+
+    <TextView
+        android:id="@+id/music_artist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/music_previous"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/bg_round_button"
+            android:backgroundTint="@color/surface_raised"
+            android:contentDescription="@string/previous_track"
+            android:scaleType="center"
+            android:src="@drawable/ic_skip_previous"
+            android:tint="@color/text_primary" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/music_play"
+            android:layout_width="76dp"
+            android:layout_height="76dp"
+            android:background="@drawable/bg_round_button"
+            android:backgroundTint="@color/tile_music"
+            android:contentDescription="@string/play_pause"
+            android:scaleType="center"
+            android:tint="@color/bg_bottom" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/music_next"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:background="@drawable/bg_round_button"
+            android:backgroundTint="@color/surface_raised"
+            android:contentDescription="@string/next_track"
+            android:scaleType="center"
+            android:src="@drawable/ic_skip_next"
+            android:tint="@color/text_primary" />
+    </LinearLayout>
+</LinearLayout>

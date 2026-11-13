@@ -2,51 +2,81 @@
 <resources>
     <string name="app_name">Bike Link</string>
 
-    <!-- Status card -->
-    <string name="status_starting_title">Starting…</string>
-    <string name="status_starting_detail">Getting ready to listen for your iPhone.</string>
-    <string name="status_setup_title">Finish setup</string>
-    <string name="status_setup_detail">Complete the steps below so your iPhone can start rides.</string>
-    <string name="status_no_wifi_title">Join your iPhone\'s hotspot</string>
-    <string name="status_no_wifi_detail">Turn on Personal Hotspot on your iPhone, then connect this phone to it.</string>
-    <string name="status_other_network_title">On a different Wi-Fi</string>
-    <string name="status_other_network_detail">Connected to %1$s. Switch to your iPhone\'s Personal Hotspot to ride.</string>
-    <string name="status_ready_title">Ready to ride</string>
-    <string name="status_ready_detail">Linked to your iPhone · %1$s</string>
+    <!-- Dashboard: status gauge -->
+    <string name="status_word_ready">READY</string>
+    <string name="status_caption_ready">to ride</string>
+    <string name="status_detail_ready">Linked to your iPhone · %1$s</string>
+    <string name="status_word_hotspot">HOTSPOT</string>
+    <string name="status_caption_hotspot">not joined</string>
+    <string name="status_detail_no_wifi">Turn on Personal Hotspot on your iPhone, then join it from this phone.</string>
+    <string name="status_detail_other_wifi">On another Wi-Fi (%1$s). Join your iPhone\'s Personal Hotspot to ride.</string>
+    <string name="status_word_setup">SETUP</string>
+    <string name="status_caption_setup">needed</string>
+    <string name="status_detail_setup">Tap Setup to finish. It only takes a minute.</string>
+    <string name="status_word_starting">WAIT</string>
+    <string name="status_caption_starting">starting</string>
+    <string name="status_detail_starting">Getting ready to listen for your iPhone.</string>
 
-    <!-- Last ride card -->
-    <string name="last_ride_label">Last ride</string>
-    <string name="last_ride_none_title">No rides yet</string>
-    <string name="last_ride_none_detail">Send a destination from your iPhone, and Google Maps opens here in two-wheeler mode.</string>
-    <string name="last_ride_navigating_detail">Sent %1$s · two-wheeler route</string>
-    <string name="last_ride_stopped_title">Ride stopped</string>
+    <string name="link_ready">iPhone linked</string>
+    <string name="link_missing">No iPhone link</string>
 
-    <!-- Bike code card -->
+    <!-- Dashboard: tiles -->
+    <string name="tile_navigate">Navigate</string>
+    <string name="tile_navigate_last">Last: %1$s</string>
+    <string name="tile_navigate_stopped">Last ride ended %1$s</string>
+    <string name="tile_navigate_none">Send a place from your iPhone</string>
+    <string name="tile_music">Music</string>
+    <string name="tile_calls">Calls</string>
+    <string name="tile_bluetooth_next">Coming next</string>
+    <string name="tile_setup">Setup</string>
+    <string name="tile_setup_done">All set</string>
+    <plurals name="tile_setup_left">
+        <item quantity="one">%1$d step left</item>
+        <item quantity="other">%1$d steps left</item>
+    </plurals>
+    <string name="coming_with_bluetooth">This connects to your iPhone in the Bluetooth step, coming next.</string>
+
     <string name="bike_code_label">Bike code</string>
-    <string name="bike_code_hint">Enter once in your iPhone Shortcuts</string>
+    <string name="bike_code_hint">Enter this once in your iPhone Shortcuts. It makes sure only your iPhone can control this phone.</string>
 
-    <!-- Setup -->
+    <!-- Ride screen -->
+    <string name="preview_banner">Preview · sample ride</string>
+    <string name="end_ride">End ride</string>
+    <string name="incoming_call">Incoming call</string>
+    <string name="accept_call">Answer</string>
+    <string name="decline_call">Decline</string>
+    <string name="previous_track">Previous track</string>
+    <string name="next_track">Next track</string>
+    <string name="play_pause">Play or pause</string>
+    <string name="trip_meta">%1$s · arrive %2$s</string>
+    <string name="preview_distance">300 m</string>
+    <string name="preview_road">Turn right onto FC Road</string>
+    <string name="preview_time">16 min</string>
+    <string name="preview_remaining">6.2 km</string>
+    <string name="preview_song">Sunset Highway</string>
+    <string name="preview_artist">Ride Playlist</string>
+    <string name="preview_caller">Mom</string>
+
+    <!-- Setup screen -->
     <string name="setup_title">Setup</string>
+    <string name="setup_intro">A few one-time permissions, so your iPhone can start rides on this phone.</string>
     <string name="setup_summary">Done: %1$d / %2$d</string>
-    <string name="setup_show">Setup</string>
-    <string name="setup_hide">Hide setup</string>
+    <string name="close">Close</string>
     <string name="step_allow">Allow</string>
     <string name="step_turn_on">Turn on</string>
     <string name="step_done_description">Done</string>
 
     <string name="step_overlay">Display over other apps</string>
-    <string name="step_overlay_detail">Lets Bike Link open Google Maps when a destination arrives from your iPhone.</string>
+    <string name="step_overlay_detail">Lets Bike Link open navigation when your iPhone sends a place.</string>
     <string name="step_battery">No battery restrictions</string>
-    <string name="step_battery_detail">Stops Android from closing Bike Link in the background during a ride.</string>
+    <string name="step_battery_detail">Stops Android closing Bike Link during a ride.</string>
     <string name="step_notifications">Notifications</string>
     <string name="step_notifications_detail">Shows that Bike Link is running.</string>
     <string name="step_local_network">Local network</string>
     <string name="step_local_network_detail">Lets commands from your iPhone reach this phone over the hotspot.</string>
     <string name="step_helper">Maps helper (optional)</string>
-    <string name="step_helper_detail">Taps \"Yes\" when you change destination mid-ride, and ends navigation when you send Stop Ride. In the list, open \"Bike Link – Maps helper\" and turn it on.</string>
-    <string name="step_helper_detail_restricted">Taps \"Yes\" when you change destination mid-ride, and ends navigation when you send Stop Ride. In the list, open \"Bike Link – Maps helper\" and turn it on. If Android says it\'s a restricted setting: open App info for Bike Link, tap ⋮, choose \"Allow restricted settings\", then try again.</string>
-
-    <string name="footer">Bike Link keeps working in the background, so you can leave this screen.</string>
+    <string name="step_helper_detail">Confirms destination changes and ends rides for you. In the list, open \"Bike Link – Maps helper\".</string>
+    <string name="step_helper_detail_restricted">Confirms destination changes and ends rides for you. If Android calls it restricted: App info → ⋮ → Allow restricted settings.</string>
 
     <!-- Maps helper (accessibility service) -->
     <string name="maps_helper_label">Bike Link – Maps helper</string>

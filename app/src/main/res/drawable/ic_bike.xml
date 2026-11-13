@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The motorbike from the app icon on its own, cropped to its bounds, for the dashboard gauge. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="52dp"
+    android:height="36dp"
+    android:viewportWidth="52"
+    android:viewportHeight="36">
+    <group
+        android:translateX="-26"
+        android:translateY="-46">
+        <path
+            android:pathData="M29.5,71a7.5,7.5 0,1 0,15 0a7.5,7.5 0,1 0,-15 0 M57.5,71a7.5,7.5 0,1 0,15 0a7.5,7.5 0,1 0,-15 0 M37,71L46,65 M65,71L59.5,53.5"
+            android:strokeWidth="3.2"
+            android:strokeColor="@android:color/white"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M56.5,50.5L62,51.5"
+            android:strokeWidth="3"
+            android:strokeColor="@android:color/white"
+            android:strokeLineCap="round" />
+        <path
+            android:fillColor="@android:color/white"
+            android:pathData="M30.5,59.5L43,57C45,52.5 51,51 57.5,52.5L60.5,56L57,60.5L44,61.5Z M44.5,60L57,59.5L55.5,67L46.5,67.5Z M61.3,57a2.3,2.3 0,1 0,4.6 0a2.3,2.3 0,1 0,-4.6 0 M35.4,71a1.6,1.6 0,1 0,3.2 0a1.6,1.6 0,1 0,-3.2 0 M63.4,71a1.6,1.6 0,1 0,3.2 0a1.6,1.6 0,1 0,-3.2 0" />
+    </group>
+</vector>

@@ -47,6 +47,15 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".RideActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".SetupActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
         <!-- Has no screen of its own: wakes and unlocks the phone, opens Google Maps, then closes. -->
         <activity
             android:name=".LaunchMapsActivity"

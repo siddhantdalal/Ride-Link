@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dashboard block: the status gauge, with the motorbike and status word inside it. The gauge draws itself as large
+     as the space it's given, so the including layout decides its size. -->
+<!-- A real FrameLayout rather than <merge>: the including layout sizes it, and it can be tapped. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/gauge_frame"
+    android:layout_width="match_parent"
+    android:layout_height="300dp"
+    tools:ignore="MergeRootFrame">
+
+    <View
+        android:id="@+id/gauge_glow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <com.siddhantdalal.bikelink.RideGaugeView
+        android:id="@+id/gauge"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no" />
+
+    <!-- Scaled in code so it always fits inside the ring of tick marks, whatever size the gauge is. -->
+    <LinearLayout
+        android:id="@+id/gauge_center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <ImageView
+            android:layout_width="66dp"
+            android:layout_height="46dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_bike"
+            android:tint="@color/text_primary" />
+
+        <!-- Fixed width with auto-sizing: short words like READY stay big, longer ones like HOTSPOT shrink so they
+             never touch the gauge's tick marks. -->
+        <TextView
+            android:id="@+id/status_word"
+            android:layout_width="170dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
+            android:accessibilityLiveRegion="polite"
+            android:autoSizeMaxTextSize="44sp"
+            android:autoSizeMinTextSize="22sp"
+            android:autoSizeTextType="uniform"
+            android:fontFamily="@font/space_grotesk"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:letterSpacing="0.04"
+            android:maxLines="1"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/status_caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.25"
+            android:textAllCaps="true"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+    </LinearLayout>
+</FrameLayout>

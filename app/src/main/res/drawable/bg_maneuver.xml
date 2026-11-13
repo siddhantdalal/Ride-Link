@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The next-turn card on the ride screen: the brightest thing on screen, so it can be read at speed. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="28dp" />
+    <gradient
+        android:angle="315"
+        android:endColor="#1FA866"
+        android:startColor="@color/accent" />
+</shape>

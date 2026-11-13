@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ride block: an incoming call on the iPhone. While ringing, it takes the music card's place at full width, with
+     72dp Decline and Answer buttons far apart so gloves can't hit the wrong one. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/call_card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_card"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="18dp"
+    android:paddingVertical="16dp">
+
+    <ImageButton
+        android:id="@+id/call_decline"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:background="@drawable/bg_round_button"
+        android:backgroundTint="@color/danger"
+        android:contentDescription="@string/decline_call"
+        android:scaleType="center"
+        android:src="@drawable/ic_call_end"
+        android:tint="@android:color/white" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="14dp"
+        android:layout_weight="1"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.15"
+            android:text="@string/incoming_call"
+            android:textAllCaps="true"
+            android:textColor="@color/tile_calls"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/call_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/space_grotesk"
+            android:singleLine="true"
+            android:textColor="@color/text_primary"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/call_accept"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:background="@drawable/bg_round_button"
+        android:backgroundTint="@color/accent"
+        android:contentDescription="@string/accept_call"
+        android:scaleType="center"
+        android:src="@drawable/ic_call"
+        android:tint="@color/on_accent" />
+</LinearLayout>
