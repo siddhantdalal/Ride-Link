@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The optional now-playing bar over Google Maps: the iPhone's song, with play/pause and next as 52dp glove-sized
+     buttons. It has a fixed width (set by its window), so it never jumps around as songs change. Dragging the
+     song name moves the bar, and it stays where it's put. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_music_bar"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingVertical="6dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="6dp">
+
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_music_note"
+        android:tint="@color/music" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:layout_marginEnd="8dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/music_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:singleLine="true"
+            android:textColor="@color/text_primary"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/music_artist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/music_play"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_round_button"
+        android:backgroundTint="@color/music"
+        android:contentDescription="@string/play_pause"
+        android:scaleType="center"
+        android:src="@drawable/ic_play_arrow"
+        android:tint="@color/surface" />
+
+    <ImageButton
+        android:id="@+id/music_next"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginStart="6dp"
+        android:background="@drawable/bg_round_button"
+        android:backgroundTint="@color/surface_raised"
+        android:contentDescription="@string/next_track"
+        android:scaleType="center"
+        android:src="@drawable/ic_skip_next"
+        android:tint="@color/text_primary" />
+</LinearLayout>

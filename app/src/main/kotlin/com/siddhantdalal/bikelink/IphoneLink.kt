@@ -132,8 +132,22 @@ object IphoneLink {
     fun respondToCall(answer: Boolean) {
         link.post {
             val call = state.call ?: return@post
-            controlPoint?.let { write(it, Ancs.callAction(call.uid, answer)) }
+            val control = controlPoint
+            if (control == null) {
+                // The link is gone, so the call can't be acted on from here: drop it rather than keep showing it.
+                publish(state.copy(call = null))
+                return@post
+            }
+            write(control, Ancs.callAction(call.uid, answer))
         }
+    }
+
+    /**
+     * Replaces the state as if the iPhone had sent it. Only for testing without an iPhone: debug builds' test receiver
+     * uses it, and release builds strip it out, since nothing else calls it.
+     */
+    fun injectForTesting(newState: State) {
+        link.post { publish(newState) }
     }
 
     private fun startOnLink(app: Context) {
@@ -161,6 +175,8 @@ object IphoneLink {
         server = null
         resetSession()
         context?.let(::unregisterReceivers)
+        // Nothing is linked any more: drop any call or song still showing.
+        publish(State(Status.WAITING))
     }
 
     // --- Advertising, so the iPhone can find and pair with us ---
@@ -440,7 +456,9 @@ object IphoneLink {
         advertising = false
         gatt?.close()
         gatt = null
-        server = null // closed by the system along with Bluetooth
+        // Bluetooth took the server down with it, but closing it still releases our callback.
+        server?.close()
+        server = null
         resetSession()
         publish(State(Status.BLUETOOTH_OFF))
     }

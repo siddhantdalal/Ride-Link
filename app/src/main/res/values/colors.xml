@@ -1,31 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Always dark: the screen sits on a handlebar, where a dark, high-contrast UI reads best and glares least. -->
-    <color name="bg_top">#0C1411</color>
-    <color name="bg_bottom">#060808</color>
-    <color name="surface">#111816</color>
-    <color name="surface_raised">#17211D</color>
-    <color name="surface_stroke">#1F2B26</color>
-    <color name="gauge_track">#1A2420</color>
+    <!-- Light ("day") palette. The dark palette is in values-night, and Android switches between them with the phone's
+         dark theme setting. Text colours meet WCAG AA contrast (4.5:1) on the surfaces they sit on. -->
+    <color name="bg_top">#F7F8FA</color>
+    <color name="bg_bottom">#ECEFF3</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_raised">#EDF0F4</color>
+    <color name="surface_stroke">#DCE1E7</color>
 
-    <color name="text_primary">#EEF3F0</color>
-    <color name="text_secondary">#8B9A93</color>
-    <color name="text_tertiary">#5D6B65</color>
+    <color name="text_primary">#11161C</color>
+    <color name="text_secondary">#56606C</color>
 
-    <color name="accent">#2FD07F</color>
-    <color name="on_accent">#04140B</color>
-    <color name="accent_dark">#1FA866</color>
+    <color name="accent">#0A8545</color>
+    <color name="on_accent">#FFFFFF</color>
 
-    <color name="status_ready">#2FD07F</color>
-    <color name="status_warning">#FFB020</color>
-    <color name="status_idle">#5D6B65</color>
-    <color name="danger">#FF5A4E</color>
+    <color name="status_warning">#A35F00</color>
+    <color name="status_idle">#8A939E</color>
+    <color name="danger">#D93025</color>
 
-    <!-- One accent per dashboard tile, the way CarPlay gives each app its own colour. -->
-    <color name="tile_navigate">#2FD07F</color>
-    <color name="tile_music">#A78BFA</color>
-    <color name="tile_calls">#4FC3F7</color>
-    <color name="tile_setup">#9AA7A0</color>
+    <!-- One colour each for calls and music, used on the bars over Google Maps and on the status screen. -->
+    <color name="calls">#0873B8</color>
+    <color name="music">#7357D6</color>
 
+    <!-- The bars floating over Google Maps: nearly opaque, so they stay readable in sunlight. -->
+    <color name="glass_top">#F5FFFFFF</color>
+    <color name="glass_bottom">#F2F3F5F8</color>
+    <color name="glass_stroke">#1F000000</color>
+    <!-- Dims the map behind the incoming-call capsule (35%), so the call stands out but the map stays visible. -->
+    <color name="scrim">#59000000</color>
+    <color name="ripple">#1F000000</color>
+
+    <!-- The launcher icon's background. The same in both themes. -->
     <color name="icon_background">#1E8E3E</color>
 </resources>

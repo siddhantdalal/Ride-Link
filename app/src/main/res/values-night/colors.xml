@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark ("night") palette: neutral graphite, so it glares least at night. Same names as the light palette. -->
+    <color name="bg_top">#111418</color>
+    <color name="bg_bottom">#08090B</color>
+    <color name="surface">#171A1F</color>
+    <color name="surface_raised">#23272E</color>
+    <color name="surface_stroke">#2C3138</color>
+
+    <color name="text_primary">#F2F4F7</color>
+    <color name="text_secondary">#9AA3AE</color>
+
+    <color name="accent">#2FD07F</color>
+    <color name="on_accent">#04140B</color>
+
+    <color name="status_warning">#FFB020</color>
+    <color name="status_idle">#69727D</color>
+    <color name="danger">#FF5A4E</color>
+
+    <color name="calls">#5AC8FA</color>
+    <color name="music">#B39DFA</color>
+
+    <color name="glass_top">#F21C2026</color>
+    <color name="glass_bottom">#F2111417</color>
+    <color name="glass_stroke">#29FFFFFF</color>
+    <!-- Dims the map behind the incoming-call capsule (45%), so the call stands out but the map stays visible. -->
+    <color name="scrim">#73000000</color>
+    <color name="ripple">#29FFFFFF</color>
+</resources>

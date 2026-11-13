@@ -1,11 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Framework Material theme: the screens use framework views, so no Material Components library is needed. -->
-    <style name="Theme.BikeLink" parent="@android:style/Theme.Material.NoActionBar">
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Framework Material themes: the app's two small screens need no AndroidX or Material Components library.
+         Base.Theme.BikeLink is light here and dark in values-night; everything else is shared. -->
+    <style name="Base.Theme.BikeLink" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+    </style>
+
+    <style name="Theme.BikeLink" parent="Base.Theme.BikeLink">
         <item name="android:colorPrimary">@color/accent</item>
         <item name="android:colorAccent">@color/accent</item>
         <item name="android:windowBackground">@color/bg_bottom</item>
         <item name="android:statusBarColor">@color/bg_top</item>
         <item name="android:navigationBarColor">@color/bg_bottom</item>
+    </style>
+
+    <!-- For LaunchMapsActivity, which never draws anything. -->
+    <style name="Theme.BikeLink.Invisible" parent="@android:style/Theme.Translucent.NoTitleBar">
+        <item name="android:windowAnimationStyle">@null</item>
     </style>
 </resources>

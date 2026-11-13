@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- A status message on the ride screen: amber, so it stands out from the trip strip. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <corners android:radius="18dp" />
-    <solid android:color="#26FFB020" />
-    <stroke
-        android:width="1dp"
-        android:color="#66FFB020" />
-</shape>

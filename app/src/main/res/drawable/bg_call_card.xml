@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The caller's name card above the call capsule: frosted, with a calls-blue edge so it stands out the moment it
+     rings. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="24dp" />
+    <gradient
+        android:angle="270"
+        android:endColor="@color/glass_bottom"
+        android:startColor="@color/glass_top" />
+    <stroke
+        android:width="2dp"
+        android:color="@color/calls" />
+</shape>

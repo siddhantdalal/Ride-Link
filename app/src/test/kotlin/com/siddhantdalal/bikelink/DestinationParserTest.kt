@@ -107,19 +107,6 @@ class DestinationParserTest {
     }
 
     @Test
-    fun `coordinates are read back from a destination`() {
-        assertEquals(18.5622 to 73.9167, Destination("18.5622,73.9167", "Phoenix").coordinates())
-        assertEquals(-33.85 to 151.2, Destination("-33.85, 151.2", "Sydney").coordinates())
-    }
-
-    @Test
-    fun `place names are not mistaken for coordinates`() {
-        assertEquals(null, Destination("Shaniwar Wada, Pune", "Shaniwar Wada").coordinates())
-        assertEquals(null, Destination("12, MG Road", "12, MG Road").coordinates())
-        assertEquals(null, Destination("95.1,73.2", "95.1,73.2").coordinates())
-    }
-
-    @Test
     fun `recognises short links`() {
         assertTrue(DestinationParser.isShortLink("https://maps.app.goo.gl/x"))
         assertTrue(DestinationParser.isShortLink("https://goo.gl/maps/x"))

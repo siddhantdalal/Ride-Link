@@ -8,20 +8,24 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.content.res.Configuration
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import java.io.IOException
 
 /**
- * Keeps the command listener running in the background.
+ * Bike Link's background work, for as long as the phone is on: the command listener for the iPhone's Shortcuts, the
+ * Bluetooth link for its calls and music, and the call and music overlays over Google Maps.
  *
- * It's a foreground service, with an ongoing notification, because that's the only reliable way to keep listening
- * for hours. Without it, both Android and phone makers' battery savers stop background apps.
+ * It's a foreground service, with an ongoing notification, because that's the only reliable way to keep running for
+ * hours. Without it, both Android and phone makers' battery savers stop background apps.
  */
 class BikeLinkService : Service() {
 
     private var server: CommandServer? = null
+    private var overlays: Overlays? = null
+    private val iphoneListener: (IphoneLink.State) -> Unit = { overlays?.render(it) }
 
     override fun onCreate() {
         super.onCreate()
@@ -34,29 +38,49 @@ class BikeLinkService : Service() {
             stopSelf()
             return
         }
-        val handler = CommandHandler(applicationContext, BikeCode.get(this))
-        server = try {
-            CommandServer(PORT, handler::handle) { Log.w(TAG, "Command server error", it) }.also { it.start() }
-        } catch (e: IOException) {
-            Log.e(TAG, "Couldn't listen on port $PORT", e)
-            stopSelf()
-            null
-        }
-        isRunning = server != null
-        // The Bluetooth link to the iPhone (calls and music) lives as long as this service.
+        overlays = Overlays(this)
+        IphoneLink.addListener(iphoneListener)
         IphoneLink.start(this)
+        isRunning = true
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = START_STICKY
+    /** Every start request (opening the app, boot, the Maps helper) also retries the listener if it isn't up. */
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (isRunning && server == null) startServer()
+        return START_STICKY
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Rotated, or switched between light and dark: rebuild the overlays to match.
+        overlays?.refresh()
+    }
 
     override fun onDestroy() {
+        IphoneLink.removeListener(iphoneListener)
+        overlays?.release()
+        overlays = null
         IphoneLink.stop()
         server?.stop()
+        server = null
         isRunning = false
+        isListening = false
         super.onDestroy()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
+
+    private fun startServer() {
+        val handler = CommandHandler(applicationContext, BikeCode.get(this))
+        server = try {
+            CommandServer(PORT, handler::handle) { Log.w(TAG, "Command server error", it) }.also { it.start() }
+        } catch (e: IOException) {
+            // Calls and music keep working. The next start request tries again.
+            Log.e(TAG, "Couldn't listen on port $PORT", e)
+            null
+        }
+        isListening = server != null
+    }
 
     private fun startInForeground() {
         val channel = NotificationChannel(
@@ -93,8 +117,14 @@ class BikeLinkService : Service() {
         private const val CHANNEL_ID = "ride_link"
         private const val NOTIFICATION_ID = 1
 
+        /** The service is up: the iPhone link and the overlays are running. */
         @Volatile
         var isRunning = false
+            private set
+
+        /** The command listener is up, so the iPhone's Shortcuts can reach this phone. */
+        @Volatile
+        var isListening = false
             private set
 
         fun start(context: Context) {

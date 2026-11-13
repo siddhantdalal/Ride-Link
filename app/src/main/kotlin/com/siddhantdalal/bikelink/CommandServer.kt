@@ -144,7 +144,6 @@ class CommandServer(
         404 -> "Not Found"
         409 -> "Conflict"
         422 -> "Unprocessable Content"
-        429 -> "Too Many Requests"
         500 -> "Internal Server Error"
         else -> ""
     }

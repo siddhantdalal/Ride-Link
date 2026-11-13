@@ -1,6 +1,5 @@
 package com.siddhantdalal.bikelink
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
@@ -12,14 +11,14 @@ import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 
-/** The one-time permissions Bike Link needs, as shown on the setup screen and summarised on the dashboard. */
+/** The one-time permissions Bike Link needs, as listed on its screen. */
 class SetupChecklist(private val activity: Activity) {
 
     class Step(
         val title: Int,
         val detail: Int,
         val done: Boolean,
-        /** Without it, rides can't start. Optional steps add extras. */
+        /** Without it, Bike Link's main features don't work. Optional steps add extras. */
         val required: Boolean,
         /** The button's label. */
         val action: Int = if (required) R.string.step_allow else R.string.step_turn_on,
@@ -27,14 +26,6 @@ class SetupChecklist(private val activity: Activity) {
     )
 
     fun steps(): List<Step> = buildList {
-        // Navigation needs precise location. Asking for both lets Android 12+ offer its precise/approximate choice.
-        add(permissionStep(
-            check = Manifest.permission.ACCESS_FINE_LOCATION,
-            request = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
-            title = R.string.step_location,
-            detail = R.string.step_location_detail,
-            required = true,
-        ))
         add(Step(R.string.step_overlay, R.string.step_overlay_detail, Settings.canDrawOverlays(activity), required = true) {
             activity.startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, packageUri()))
         })
@@ -43,56 +34,52 @@ class SetupChecklist(private val activity: Activity) {
         add(Step(R.string.step_battery, R.string.step_battery_detail, unrestricted, required = true) {
             requestBatteryExemption()
         })
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            add(permissionStep(
-                check = Manifest.permission.POST_NOTIFICATIONS,
-                title = R.string.step_notifications,
-                detail = R.string.step_notifications_detail,
-                required = false,
-            ))
-        }
-        // Calls and music from the iPhone, over Bluetooth. Android 12+ only: older versions can't advertise the
-        // way the iPhone needs to find the phone.
+        // The iPhone's calls and music, over Bluetooth. Android 12+ only: older versions can't advertise the way the
+        // iPhone needs to find the phone.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val bluetooth = IphoneLink.requiredPermissions()
-            add(permissionStep(
-                check = bluetooth.first(),
-                request = bluetooth,
-                title = R.string.step_bluetooth,
-                detail = R.string.step_bluetooth_detail,
-                required = false,
-                alsoGranted = bluetooth.toList(),
-            ))
+            add(permissionStep(bluetooth, R.string.step_bluetooth, R.string.step_bluetooth_detail, required = true))
             val paired = IphoneLink.state.status == IphoneLink.Status.CONNECTED
             add(Step(R.string.step_pair, R.string.step_pair_detail, paired, required = false, action = R.string.step_show_me) {
                 showPairingSteps()
             })
         }
+        // Android 13+ hides accessibility settings from sideloaded apps until the user allows them, so say how.
+        val helperDetail = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            R.string.step_helper_detail_restricted
+        } else {
+            R.string.step_helper_detail
+        }
+        add(Step(R.string.step_helper, helperDetail, MapsHelperService.isEnabled, required = false) {
+            activity.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        })
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            add(permissionStep(
+                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                R.string.step_notifications,
+                R.string.step_notifications_detail,
+                required = false,
+            ))
+        }
         if (Build.VERSION.SDK_INT >= ANDROID_17) {
             add(permissionStep(
-                check = ACCESS_LOCAL_NETWORK,
-                title = R.string.step_local_network,
-                detail = R.string.step_local_network_detail,
+                arrayOf(ACCESS_LOCAL_NETWORK),
+                R.string.step_local_network,
+                R.string.step_local_network_detail,
                 required = true,
             ))
         }
     }
 
-    private fun permissionStep(
-        check: String,
-        title: Int,
-        detail: Int,
-        required: Boolean,
-        request: Array<String> = arrayOf(check),
-        alsoGranted: List<String> = listOf(check),
-    ): Step {
-        val granted = alsoGranted.all { activity.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
-        return Step(title, detail, granted, required) { activity.requestPermissions(request, 0) }
+    /** A step that's done once every one of [permissions] is granted, and asks for all of them at once. */
+    private fun permissionStep(permissions: Array<String>, title: Int, detail: Int, required: Boolean): Step {
+        val granted = permissions.all { activity.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
+        return Step(title, detail, granted, required) { activity.requestPermissions(permissions, 0) }
     }
 
     /** Pairing happens on the iPhone, so this shows the rider what to tap there, including this phone's name. */
     private fun showPairingSteps() {
-        AlertDialog.Builder(activity, android.R.style.Theme_Material_Dialog_Alert)
+        AlertDialog.Builder(activity)
             .setTitle(R.string.pair_title)
             .setMessage(activity.getString(R.string.pair_steps, bluetoothName()))
             .setPositiveButton(R.string.ok, null)

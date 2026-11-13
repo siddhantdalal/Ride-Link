@@ -1,114 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The car screen, landscape: CarPlay's layout. It never scrolls.
-     - The sidebar on the left: status (clock, iPhone link, battery), Map, Music, Calls, and the Dashboard/Home toggle.
-     - Dashboard: the live map, with a column of cards on the right: next turn, now playing, trip.
-     - Map: the full map with Google's own turn banner and a floating trip card.
-     - Music, Calls, Home: full screens over the map. The map keeps running underneath, so guidance never stops.
-     - An incoming call shows as a compact bar over whichever screen is open. -->
-<!-- The music controls appear twice (the Dashboard card and the Music screen) on purpose: each card looks up its
-     views inside its own root, so the repeated ids never collide. -->
+<!-- Bike Link's screen, landscape: status and the bike code on the left, setup on the right. Each side scrolls on
+     its own if it has to. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg_screen"
     android:baselineAligned="false"
     android:fitsSystemWindows="true"
-    tools:ignore="DuplicateIncludedIds"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:paddingHorizontal="20dp">
 
-    <include layout="@layout/nav_rail" />
-
-    <FrameLayout
+    <ScrollView
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:baselineAligned="false"
-            android:orientation="horizontal">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingVertical="16dp">
 
-            <FrameLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
+            <include layout="@layout/main_status" />
 
-                <com.google.android.libraries.navigation.NavigationView
-                    android:id="@+id/navigation_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-
-                <include
-                    layout="@layout/ride_banner"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_margin="24dp" />
-
-                <include
-                    android:id="@+id/map_trip"
-                    layout="@layout/card_trip"
-                    android:layout_width="300dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|end"
-                    android:layout_margin="12dp"
-                    android:visibility="gone" />
-            </FrameLayout>
-
-            <LinearLayout
-                android:id="@+id/dashboard_column"
-                android:layout_width="290dp"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:padding="10dp">
-
-                <!-- The turn card takes the height it needs. The music card gets the rest, so its buttons stay round. -->
-                <include
-                    android:id="@+id/dash_turn"
-                    layout="@layout/card_turn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-                <include
-                    android:id="@+id/dash_music"
-                    layout="@layout/card_music"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_marginTop="10dp"
-                    android:layout_weight="1" />
-
-                <include
-                    android:id="@+id/dash_trip"
-                    layout="@layout/card_trip"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp" />
-            </LinearLayout>
+            <include
+                layout="@layout/main_code"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" />
         </LinearLayout>
+    </ScrollView>
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="20dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <include
-            android:id="@+id/pane_music"
-            layout="@layout/pane_music"
-            android:visibility="gone" />
-
-        <include
-            android:id="@+id/pane_calls"
-            layout="@layout/pane_calls"
-            android:visibility="gone" />
-
-        <include
-            android:id="@+id/pane_home"
-            layout="@layout/pane_home"
-            android:visibility="gone" />
-
-        <include
-            android:id="@+id/call_bar"
-            layout="@layout/card_call_bar"
+            layout="@layout/main_setup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_margin="12dp"
-            android:visibility="gone" />
-    </FrameLayout>
+            android:layout_marginVertical="16dp" />
+    </ScrollView>
 </LinearLayout>

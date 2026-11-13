@@ -5,21 +5,8 @@ import java.net.URI
 import java.net.URISyntaxException
 import java.net.URLDecoder
 
-/**
- * Where to ride. [query] is either coordinates ("18.5622,73.9167") or a place name to look up, and [label] is the
- * name we tell the rider.
- */
-data class Destination(val query: String, val label: String) {
-
-    /** Latitude and longitude when [query] holds coordinates, or null when it's a place name to look up. */
-    fun coordinates(): Pair<Double, Double>? {
-        val parts = query.split(',')
-        if (parts.size != 2) return null
-        val latitude = parts[0].trim().toDoubleOrNull() ?: return null
-        val longitude = parts[1].trim().toDoubleOrNull() ?: return null
-        return if (latitude in -90.0..90.0 && longitude in -180.0..180.0) latitude to longitude else null
-    }
-}
+/** Where to ride. [query] is what Google Maps routes to, and [label] is the name we tell the rider. */
+data class Destination(val query: String, val label: String)
 
 /** The result of reading what the iPhone sent, before any online lookups. */
 sealed interface ParseResult

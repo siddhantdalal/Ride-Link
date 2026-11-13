@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- An incoming iPhone call over Google Maps: the map dims a little, the caller's name shows, and below it the
+     capsule to slide (SwipeCallView). The capsule's size and direction are set in code, from the screen's shape. -->
+<!-- Overdraw: an overlay window is a bare view added to the window manager, so the theme's window background is
+     never drawn under the scrim. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/scrim"
+    tools:ignore="Overdraw"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_call_card"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingHorizontal="28dp"
+        android:paddingVertical="12dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.15"
+            android:text="@string/incoming_call"
+            android:textAllCaps="true"
+            android:textColor="@color/calls"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/call_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/space_grotesk"
+            android:singleLine="true"
+            android:textColor="@color/text_primary"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <com.siddhantdalal.bikelink.SwipeCallView
+        android:id="@+id/call_swipe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
+</LinearLayout>

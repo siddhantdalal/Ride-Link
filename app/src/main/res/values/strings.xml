@@ -1,129 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Bike Link</string>
 
-    <!-- Car screen: sidebar / bottom bar -->
-    <string name="nav_map">Map</string>
-    <string name="nav_music">Music</string>
-    <string name="nav_calls">Calls</string>
-    <string name="nav_home">Home</string>
-    <string name="nav_dashboard">Dashboard</string>
-    <string name="status_hotspot_on">iPhone hotspot connected</string>
-    <string name="status_hotspot_off">Not on the iPhone hotspot</string>
-    <string name="status_bluetooth_on">iPhone Bluetooth connected</string>
-    <string name="status_bluetooth_off">iPhone Bluetooth not connected</string>
-    <string name="battery_level">%1$d%%</string>
-    <string name="battery_charging">Battery %1$d%%, charging</string>
-    <string name="battery_not_charging">Battery %1$d%%, not charging</string>
-
-    <!-- Car screen: cards and screens -->
-    <string name="turn_starting">Starting…</string>
-    <string name="turn_finding">Finding route…</string>
-    <string name="turn_rerouting">Rerouting…</string>
-    <string name="calls_explained">Your iPhone\'s calls ring here, over any screen, with Answer and Decline. To call someone, ask Siri through your helmet intercom.</string>
-    <string name="calls_set_up">Set up</string>
-
-    <!-- Dashboard: status gauge -->
-    <string name="status_word_ready">READY</string>
-    <string name="status_caption_ready">to ride</string>
-    <string name="status_detail_ready">Linked to your iPhone · %1$s</string>
-    <string name="status_word_hotspot">HOTSPOT</string>
-    <string name="status_caption_hotspot">not joined</string>
-    <string name="status_detail_no_wifi">Turn on Personal Hotspot on your iPhone, then join it from this phone.</string>
-    <string name="status_detail_other_wifi">On another Wi-Fi (%1$s). Join your iPhone\'s Personal Hotspot to ride.</string>
-    <string name="status_word_setup">SETUP</string>
-    <string name="status_caption_setup">needed</string>
-    <string name="status_detail_setup">Tap Setup to finish. It only takes a minute.</string>
-    <string name="status_word_starting">WAIT</string>
-    <string name="status_caption_starting">starting</string>
-    <string name="status_detail_starting">Getting ready to listen for your iPhone.</string>
-
-
-    <!-- Dashboard: tiles -->
-    <string name="tile_navigate_riding">Riding to %1$s</string>
-    <string name="link_unsupported">Needs Android 12 or newer</string>
-    <string name="link_bluetooth_off">Turn on Bluetooth</string>
-    <string name="link_permission">Allow Bluetooth in Setup</string>
-    <string name="link_waiting">Waiting for your iPhone</string>
-    <string name="music_nothing">Nothing playing</string>
-    <string name="music_now">%1$s · %2$s</string>
-    <string name="calls_ready">Ready for calls</string>
-    <string name="calls_ringing">%1$s is calling</string>
-    <string name="caller_unknown">Unknown caller</string>
-    <string name="tile_setup">Setup</string>
-    <string name="tile_setup_done">All set</string>
-    <plurals name="tile_setup_left">
-        <item quantity="one">%1$d step left</item>
-        <item quantity="other">%1$d steps left</item>
+    <!-- Status screen -->
+    <string name="summary_starting">Starting…</string>
+    <string name="summary_ready">Ready to ride</string>
+    <string name="summary_hotspot">Join your iPhone\'s hotspot to ride</string>
+    <plurals name="summary_setup_left">
+        <item quantity="one">Finish setup: %1$d step left</item>
+        <item quantity="other">Finish setup: %1$d steps left</item>
     </plurals>
+    <string name="open_maps">Open Google Maps</string>
 
-    <string name="bike_code_label">Bike code</string>
-    <string name="bike_code_hint">Enter this once in your iPhone Shortcuts. It makes sure only your iPhone can control this phone.</string>
+    <string name="status_maps">Google Maps</string>
+    <string name="status_maps_ready">Ready. Rides start in two-wheeler mode.</string>
+    <string name="status_maps_missing">Not installed. Install Google Maps from the Play Store.</string>
+    <string name="status_hotspot">iPhone hotspot</string>
+    <string name="status_hotspot_on">Connected · %1$s</string>
+    <string name="status_hotspot_other_wifi">On another Wi-Fi. Join your iPhone\'s Personal Hotspot.</string>
+    <string name="status_hotspot_off">Not connected. Turn on Personal Hotspot on your iPhone, then join it.</string>
+    <string name="status_calls">iPhone calls</string>
+    <string name="link_connected">Linked. Calls ring over Google Maps.</string>
+    <string name="link_connecting">Connecting to your iPhone…</string>
+    <string name="link_waiting">Waiting for your iPhone</string>
+    <string name="link_bluetooth_off">Turn on Bluetooth</string>
+    <string name="link_permission">Allow Bluetooth in Setup below</string>
+    <string name="link_unsupported">Needs Android 12 or newer</string>
+    <string name="music_bar">Music over Maps</string>
+    <string name="music_bar_detail">Shows the song playing on your iPhone, with play/pause and next. Drag it to move it.</string>
+    <string name="music_bar_now">Now playing: %1$s</string>
 
-    <!-- Ride screen -->
-    <string name="end_ride">End ride</string>
-    <string name="ride_starting">Loading the map…</string>
-    <string name="free_ride">Free ride</string>
-    <string name="free_ride_hint">Send a place from your iPhone for directions.</string>
-    <string name="ride_again_button">Ride to %1$s</string>
-    <string name="ride_finding_route">Finding a two-wheeler route to %1$s…</string>
-    <string name="ride_arrived">You\'ve arrived.</string>
-    <string name="ride_budget_used">Bike Link\'s navigation limit is used up (%1$d a day, %2$d a month). It resets tomorrow, or next month at the latest.</string>
-    <string name="ride_error_key">Google rejected the navigation key. Check its restrictions in Google Cloud.</string>
-    <string name="ride_error_terms">Accept Google\'s navigation terms to ride. Open the ride again to see them.</string>
-    <string name="ride_error_network">No internet. Join your iPhone\'s Personal Hotspot.</string>
-    <string name="ride_error_location_permission">Allow location in Setup, then try again.</string>
-    <string name="ride_error_generic">Navigation couldn\'t start. Try again in a moment.</string>
-    <string name="route_error_none">No two-wheeler route to %1$s.</string>
-    <string name="route_error_location_off">Turn on location to navigate.</string>
-    <string name="route_error_no_gps">Waiting for GPS. Move somewhere with a view of the sky.</string>
-    <string name="route_error_quota">Google\'s navigation check failed. Try again in a moment.</string>
-    <string name="route_error_generic">Couldn\'t plan a route to %1$s. Try again.</string>
-    <string name="incoming_call">Incoming call</string>
-    <string name="accept_call">Answer</string>
-    <string name="decline_call">Decline</string>
-    <string name="previous_track">Previous track</string>
-    <string name="next_track">Next track</string>
-    <string name="play_pause">Play or pause</string>
-    <string name="trip_meta">%1$s · arrive %2$s</string>
-
-    <!-- Setup screen -->
+    <!-- Setup -->
     <string name="setup_title">Setup</string>
-    <string name="setup_intro">A few one-time permissions, so your iPhone can start rides on this phone.</string>
-    <string name="setup_summary">Done: %1$d / %2$d</string>
-    <string name="close">Close</string>
-    <string name="bike_address">Bike phone\'s address: %1$s</string>
-    <string name="bike_address_unknown">Join your iPhone\'s hotspot to see this phone\'s address.</string>
-    <string name="about_licences">About &amp; licences</string>
-    <string name="about_title">Bike Link</string>
-    <string name="about_text">Version %1$s\n\nNavigation and maps by Google (Google Maps Platform Navigation SDK). Map data ©Google. Use is subject to the Google Maps Platform Terms of Service.\n\nTypeface: Space Grotesk, SIL Open Font License 1.1.\nIcons: Material Symbols by Google, Apache License 2.0.</string>
-    <string name="about_font_licence">Font licence</string>
-    <string name="about_icon_licence">Icon licence</string>
+    <string name="setup_intro">One-time permissions, so your iPhone can start rides and ring calls on this phone.</string>
+    <!-- "3 of 6 done" reads correctly for any count, so it needs no plural forms. -->
+    <string name="setup_summary" tools:ignore="PluralsCandidate">%1$d of %2$d done</string>
     <string name="step_allow">Allow</string>
     <string name="step_turn_on">Turn on</string>
+    <string name="step_show_me">Show me</string>
+    <string name="step_done_mark" translatable="false">✓</string>
     <string name="step_done_description">Done</string>
-
-    <string name="step_location">Location</string>
-    <string name="step_location_detail">Needed for turn-by-turn navigation. Choose \"Precise\" and \"While using the app\".</string>
+    <string name="step_overlay">Display over other apps</string>
+    <string name="step_overlay_detail">Opens Google Maps when your iPhone sends a place, and shows calls over it.</string>
+    <string name="step_battery">No battery restrictions</string>
+    <string name="step_battery_detail">Stops Android closing Bike Link in the background during a ride.</string>
     <string name="step_bluetooth">Bluetooth</string>
-    <string name="step_bluetooth_detail">For your iPhone\'s calls and music on this screen.</string>
+    <string name="step_bluetooth_detail">For your iPhone\'s calls and music.</string>
     <string name="step_pair">Pair your iPhone</string>
     <string name="step_pair_detail">Pair once, in your iPhone\'s Bluetooth settings.</string>
-    <string name="step_show_me">Show me</string>
-    <string name="pair_title">Pair your iPhone</string>
-    <string name="pair_steps">1. Keep Bike Link open, with Bluetooth on.\n2. On your iPhone, open Settings → Bluetooth.\n3. Under Other Devices, tap \"%1$s\".\n4. Tap Pair, then allow notifications.\n\nAfter that, your iPhone reconnects by itself whenever it\'s nearby.</string>
-    <string name="ok">OK</string>
-    <string name="step_overlay">Display over other apps</string>
-    <string name="step_overlay_detail">Lets the ride screen open when your iPhone sends a place.</string>
-    <string name="step_battery">No battery restrictions</string>
-    <string name="step_battery_detail">Stops Android closing Bike Link during a ride.</string>
+    <string name="step_helper">Maps helper</string>
+    <string name="step_helper_detail">Ends navigation when you send Stop Ride, and confirms a new destination mid-ride. In the list, open \"Bike Link – Maps helper\" and turn it on.</string>
+    <string name="step_helper_detail_restricted">Ends navigation when you send Stop Ride, and confirms a new destination mid-ride. In the list, open \"Bike Link – Maps helper\" and turn it on. If Android says it\'s a restricted setting: open App info for Bike Link, tap ⋮, choose \"Allow restricted settings\", then try again.</string>
     <string name="step_notifications">Notifications</string>
     <string name="step_notifications_detail">Shows that Bike Link is running.</string>
     <string name="step_local_network">Local network</string>
     <string name="step_local_network_detail">Lets commands from your iPhone reach this phone over the hotspot.</string>
+    <string name="pair_title">Pair your iPhone</string>
+    <string name="pair_steps">1. Keep this phone nearby, with Bluetooth on.\n2. On your iPhone, open Settings → Bluetooth.\n3. Under Other Devices, tap \"%1$s\".\n4. Tap Pair, then allow notifications.\n\nAfter that, your iPhone reconnects by itself whenever it\'s nearby.</string>
+    <string name="ok">OK</string>
+
+    <!-- Bike code -->
+    <string name="bike_code_label">Bike code</string>
+    <string name="bike_code_hint">Enter this once in your iPhone Shortcuts. It makes sure only your iPhone can control this phone.</string>
+    <string name="bike_address">Bike phone\'s address: %1$s</string>
+    <string name="bike_address_unknown">Join your iPhone\'s hotspot to see this phone\'s address.</string>
+    <string name="about_licences">About &amp; licences</string>
+    <string name="about_title">Bike Link</string>
+    <string name="about_text">Version %1$s\n\nNavigation by the Google Maps app, which Bike Link opens in two-wheeler mode. Calls and music come from your iPhone over Bluetooth, through Apple\'s accessory services.\n\nTypeface: Space Grotesk, SIL Open Font License 1.1.\nIcons: Material Symbols by Google, Apache License 2.0.</string>
+    <string name="about_font_licence">Font licence</string>
+    <string name="about_icon_licence">Icon licence</string>
+
+    <!-- Bars over Google Maps -->
+    <string name="incoming_call">Incoming call</string>
+    <string name="caller_unknown">Unknown caller</string>
+    <string name="accept_call">Answer</string>
+    <string name="decline_call">Decline</string>
+    <string name="call_swipe_description">Incoming call. Slide to the green end to answer, or the red end to decline.</string>
+    <string name="play_pause">Play or pause</string>
+    <string name="next_track">Next track</string>
+
+    <!-- Maps helper (accessibility service) -->
+    <string name="maps_helper_label">Bike Link – Maps helper</string>
+    <string name="maps_helper_description">Taps Google Maps\' \"Close navigation\" button when you send Stop Ride, and \"Yes\" when you send a new destination mid-ride. It only acts for a few seconds after a command from your iPhone, only inside Google Maps, and reads nothing else.</string>
 
     <!-- Notification -->
     <string name="notification_channel">Ride link</string>
     <string name="notification_title">Bike Link is ready</string>
-    <string name="notification_text">Waiting for a destination from your iPhone.</string>
+    <string name="notification_text">Listening for places, calls and music from your iPhone.</string>
 </resources>

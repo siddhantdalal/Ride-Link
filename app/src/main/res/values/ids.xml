@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Accessibility actions on the call capsule, for screen readers, which can't slide. -->
+    <item name="call_action_answer" type="id" />
+    <item name="call_action_decline" type="id" />
+</resources>

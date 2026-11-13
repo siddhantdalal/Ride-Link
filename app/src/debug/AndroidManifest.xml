@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only (merged into the main manifest): the stand-in iPhone for testing without one. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Exported so adb can reach it, but only senders holding DUMP may: the shell and the system. No app can. -->
+        <receiver
+            android:name=".DebugIphoneReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP" />
+    </application>
+</manifest>

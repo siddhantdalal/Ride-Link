@@ -4,34 +4,35 @@
 
     <!-- Receive commands from the iPhone, and expand shared map links. -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Lets the screen update its status live when the phone joins or leaves the iPhone hotspot. -->
+    <!-- Lets the status screen update live when the phone joins or leaves the iPhone hotspot. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Needed on Android 17 and newer to talk to the iPhone on the hotspot network. -->
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
 
-    <!-- Keep the command listener running in the background. -->
+    <!-- Keep listening for the iPhone (commands, calls and music) in the background. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
-    <!-- Required before Android 14+ allows a "connected device" background service. -->
+    <!-- Android 14+ only allows a "connected device" foreground service with one of these (or BLUETOOTH_CONNECT). -->
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
-    <!-- "Display over other apps": lets the ride screen open when a destination arrives in the background. -->
+    <!-- "Display over other apps": opens Google Maps when a destination arrives in the background, and floats the
+         call and music bars over it. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
-    <!-- Calls and music from the iPhone over Bluetooth Low Energy: advertising so the iPhone can pair, then
-         connecting to Apple's notification and media services. -->
+    <!-- The iPhone's calls and music over Bluetooth Low Energy: advertising so the iPhone can pair, then connecting
+         to Apple's notification and media services. -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
     <uses-feature
         android:name="android.hardware.bluetooth_le"
         android:required="false" />
 
-    <!-- Turn-by-turn navigation needs precise location. -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <queries>
+        <package android:name="com.google.android.apps.maps" />
+    </queries>
 
     <!-- No backups. allowBackup="false" covers Android 8-11, and the extraction rules cover Android 12+,
          where allowBackup alone no longer stops device-to-device transfer. Lint wants fullBackupContent too,
@@ -45,13 +46,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BikeLink">
 
-        <!-- The Google Maps Platform key, filled in at build time from secrets.properties (never committed). It only
-             works from this app's package and signing certificate, and only for the Navigation SDK. -->
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="${MAPS_API_KEY}" />
-
-        <!-- The car screen. One instance: a destination from the iPhone goes to the open one. -->
+        <!-- Status and one-time setup. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -62,21 +57,32 @@
             </intent-filter>
         </activity>
 
-
+        <!-- Has no screen of its own: wakes and unlocks the phone, opens Google Maps, then closes. -->
         <activity
-            android:name=".SetupActivity"
+            android:name=".LaunchMapsActivity"
+            android:excludeFromRecents="true"
             android:exported="false"
-            android:parentActivityName=".MainActivity" />
-
-        <!-- Google's turn-by-turn feed for the Dashboard's next-turn card. The Navigation SDK binds to it in-process. -->
-        <service
-            android:name=".NavInfoService"
-            android:exported="false" />
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.BikeLink.Invisible" />
 
         <service
             android:name=".BikeLinkService"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
+
+        <service
+            android:name=".MapsHelperService"
+            android:exported="true"
+            android:label="@string/maps_helper_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/maps_helper" />
+        </service>
 
         <!-- Both are protected broadcasts: only the system can send them. -->
         <receiver
