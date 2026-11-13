@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 
@@ -23,11 +24,15 @@ class MapsHelperService : AccessibilityService() {
     enum class Task { CONFIRM_NEW_ROUTE, STOP_NAVIGATION }
 
     private class Request(val task: Task, val expiresAt: Long) {
-        var closeTapped = false
+        var lastTapAt = 0L
     }
 
     override fun onServiceConnected() {
         instance = this
+        // Android itself starts accessibility services at boot and after app updates, even on phones whose makers
+        // block apps from starting themselves (OnePlus refused our boot/update broadcast on device). So when the
+        // helper is on, it also starts the command listener.
+        BikeLinkService.start(this)
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
@@ -49,12 +54,26 @@ class MapsHelperService : AccessibilityService() {
 
         // Maps asks this when a new destination arrives mid-ride, and may ask it when navigation is closed.
         if (root.findNode { it.hasLabel(EXIT_NAVIGATION_PROMPT) } != null) {
-            if (root.findNode { it.hasLabel(YES) }?.click() == true) pending = null
+            val tapped = root.findNode { it.hasLabel(YES) }?.click() == true
+            Log.d(TAG, "Exit navigation prompt: tapped Yes = $tapped")
+            if (tapped) pending = null
             return
         }
-        if (request.task == Task.STOP_NAVIGATION && !request.closeTapped) {
-            // The request stays open after this tap, in case Maps asks for confirmation.
-            request.closeTapped = root.findNode { it.hasLabel(CLOSE_NAVIGATION) }?.click() == true
+        if (request.task == Task.STOP_NAVIGATION) {
+            val close = root.findNode { it.hasLabel(CLOSE_NAVIGATION) }
+            if (close == null) {
+                // Its button is gone, so navigation has ended. (Before the first tap, Maps may still be coming
+                // to the front, so keep waiting until the request expires.)
+                if (request.lastTapAt != 0L) pending = null
+                return
+            }
+            // Tap again if Maps is still navigating a moment later: a tap can land while Maps is mid-transition
+            // and be ignored (seen on device).
+            val now = SystemClock.elapsedRealtime()
+            if (now - request.lastTapAt >= RETAP_INTERVAL_MS) {
+                request.lastTapAt = now
+                Log.d(TAG, "Stop ride: tapped Close navigation = ${close.click()}")
+            }
         }
     }
 
@@ -64,6 +83,8 @@ class MapsHelperService : AccessibilityService() {
         private const val YES = "Yes"
         private const val CLOSE_NAVIGATION = "Close navigation"
         private const val REQUEST_LIFETIME_MS = 10_000L
+        private const val RETAP_INTERVAL_MS = 1_000L
+        private const val TAG = "MapsHelper"
 
         @Volatile private var instance: MapsHelperService? = null
         @Volatile private var pending: Request? = null
