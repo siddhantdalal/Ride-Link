@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bike Link</string>
+
+    <string name="status_starting">Starting…</string>
+    <string name="status_ready_hotspot">✅ Ready: on your iPhone hotspot at %1$s, port %2$d</string>
+    <string name="status_other_network">⚠️ Connected to Wi-Fi (%1$s), but not to the iPhone hotspot. Join your iPhone\'s Personal Hotspot.</string>
+    <string name="status_no_wifi">⚠️ Not on Wi-Fi. Join your iPhone\'s Personal Hotspot.</string>
+
+    <string name="bike_code_label">Bike code</string>
+    <string name="bike_code_hint">Enter this once in your iPhone Shortcuts. It makes sure only your iPhone can control this phone.</string>
+
+    <string name="setup_title">One-time setup</string>
+    <string name="step_allow">Allow</string>
+    <string name="step_turn_on">Turn on</string>
+    <string name="step_done">Done ✓</string>
+
+    <string name="step_overlay">Display over other apps</string>
+    <string name="step_overlay_detail">Lets Bike Link open Google Maps when a destination arrives from your iPhone.</string>
+    <string name="step_battery">No battery restrictions</string>
+    <string name="step_battery_detail">Stops Android from closing Bike Link in the background during a ride.</string>
+    <string name="step_notifications">Notifications</string>
+    <string name="step_notifications_detail">Shows that Bike Link is running.</string>
+    <string name="step_local_network">Local network</string>
+    <string name="step_local_network_detail">Lets commands from your iPhone reach this phone over the hotspot.</string>
+    <string name="step_helper">Maps helper (optional)</string>
+    <string name="step_helper_detail">Taps \"Yes\" when you change destination mid-ride, and ends navigation when you send Stop Ride. In the list, open \"Bike Link – Maps helper\" and turn it on.</string>
+    <string name="step_helper_detail_restricted">Taps \"Yes\" when you change destination mid-ride, and ends navigation when you send Stop Ride. In the list, open \"Bike Link – Maps helper\" and turn it on. If Android says it\'s a restricted setting: open App info for Bike Link, tap ⋮, choose \"Allow restricted settings\", then try again.</string>
+
+    <string name="maps_helper_label">Bike Link – Maps helper</string>
+    <string name="maps_helper_description">Taps Google Maps\' \"Yes\" button when you send a new destination mid-ride, and \"Close navigation\" when you send Stop Ride. It only acts for a few seconds after a command from your iPhone, only inside Google Maps, and reads nothing else.</string>
+
+    <string name="notification_channel">Ride link</string>
+    <string name="notification_title">Bike Link is ready</string>
+    <string name="notification_text">Waiting for a destination from your iPhone.</string>
+</resources>

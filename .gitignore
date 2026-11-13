@@ -1,0 +1,13 @@
+# Gradle
+.gradle/
+build/
+.kotlin/
+
+# Machine-specific SDK path
+local.properties
+
+# IDEs / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
