@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ride block: an incoming call on the iPhone. While ringing, it takes the music card's place at full width, with
-     72dp Decline and Answer buttons far apart so gloves can't hit the wrong one. -->
+<!-- An incoming call, iOS 26 style: a compact bar over whatever screen is showing, so directions stay visible. Decline
+     and Answer are 64dp and sit at opposite ends, so a glove can't hit the wrong one. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/call_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_card"
+    android:background="@drawable/bg_call_bar"
+    android:elevation="8dp"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingHorizontal="18dp"
-    android:paddingVertical="16dp">
+    android:paddingHorizontal="12dp"
+    android:paddingVertical="10dp">
 
     <ImageButton
         android:id="@+id/call_decline"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:background="@drawable/bg_round_button"
         android:backgroundTint="@color/danger"
         android:contentDescription="@string/decline_call"
@@ -25,7 +25,7 @@
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="14dp"
+        android:layout_marginHorizontal="12dp"
         android:layout_weight="1"
         android:gravity="center_horizontal"
         android:orientation="vertical">
@@ -38,7 +38,7 @@
             android:text="@string/incoming_call"
             android:textAllCaps="true"
             android:textColor="@color/tile_calls"
-            android:textSize="12sp" />
+            android:textSize="11sp" />
 
         <TextView
             android:id="@+id/call_name"
@@ -49,14 +49,14 @@
             android:fontFamily="@font/space_grotesk"
             android:singleLine="true"
             android:textColor="@color/text_primary"
-            android:textSize="26sp"
+            android:textSize="22sp"
             android:textStyle="bold" />
     </LinearLayout>
 
     <ImageButton
         android:id="@+id/call_accept"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:background="@drawable/bg_round_button"
         android:backgroundTint="@color/accent"
         android:contentDescription="@string/accept_call"

@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ride block: what's playing on the iPhone. The controls are glove-sized (64dp skips, 76dp play/pause) and spread
-     across the full width, so one can't be hit by mistake for another. -->
+<!-- Dashboard card: what's playing on the iPhone, with previous / play-pause / next spread across the width so gloves
+     can't hit the wrong one. Tapping the card opens the full Music screen. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/music_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_card"
+    android:background="@drawable/bg_card_glass"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
     android:orientation="vertical"
-    android:paddingHorizontal="18dp"
-    android:paddingVertical="14dp">
+    android:paddingHorizontal="14dp"
+    android:paddingVertical="10dp">
 
     <TextView
         android:id="@+id/music_title"
@@ -22,7 +24,7 @@
         android:gravity="center_vertical"
         android:singleLine="true"
         android:textColor="@color/text_primary"
-        android:textSize="17sp" />
+        android:textSize="16sp" />
 
     <TextView
         android:id="@+id/music_artist"
@@ -32,19 +34,19 @@
         android:ellipsize="end"
         android:singleLine="true"
         android:textColor="@color/text_secondary"
-        android:textSize="14sp" />
+        android:textSize="13sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="6dp"
         android:gravity="center"
         android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/music_previous"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
             android:background="@drawable/bg_round_button"
             android:backgroundTint="@color/surface_raised"
             android:contentDescription="@string/previous_track"
@@ -59,8 +61,8 @@
 
         <ImageButton
             android:id="@+id/music_play"
-            android:layout_width="76dp"
-            android:layout_height="76dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:background="@drawable/bg_round_button"
             android:backgroundTint="@color/tile_music"
             android:contentDescription="@string/play_pause"
@@ -75,8 +77,8 @@
 
         <ImageButton
             android:id="@+id/music_next"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
             android:background="@drawable/bg_round_button"
             android:backgroundTint="@color/surface_raised"
             android:contentDescription="@string/next_track"

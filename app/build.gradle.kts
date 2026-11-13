@@ -34,9 +34,15 @@ android {
 
     lint {
         // AppCompat and the KTX extensions only arrive as part of the Navigation SDK. Bike Link's own screens use
-        // framework views and themes, where android:tint and android:drawableStart are correct, and the app doesn't
-        // depend on KTX directly. So these suggestions don't apply.
-        disable += setOf("UseAppTint", "UseCompatTextViewDrawableXml", "UseKtx")
+        // framework views and themes, whose tint and drawable APIs work on every Android version the app supports (8+),
+        // and the app doesn't depend on KTX directly. So these suggestions don't apply.
+        disable += setOf(
+            "UseAppTint",
+            "UseCompatTextViewDrawableXml",
+            "UseCompatTextViewDrawableApis",
+            "UseCompatLoadingForDrawables",
+            "UseKtx",
+        )
     }
 
     compileOptions {

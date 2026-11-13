@@ -51,6 +51,7 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
 
+        <!-- The car screen. One instance: a destination from the iPhone goes to the open one. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -61,16 +62,16 @@
             </intent-filter>
         </activity>
 
-        <!-- One ride screen at a time: a new destination from the iPhone goes to the open one. -->
-        <activity
-            android:name=".RideActivity"
-            android:exported="false"
-            android:launchMode="singleTask" />
 
         <activity
             android:name=".SetupActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
+
+        <!-- Google's turn-by-turn feed for the Dashboard's next-turn card. The Navigation SDK binds to it in-process. -->
+        <service
+            android:name=".NavInfoService"
+            android:exported="false" />
 
         <service
             android:name=".BikeLinkService"

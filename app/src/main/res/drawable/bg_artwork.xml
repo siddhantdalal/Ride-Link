@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Music screen's artwork tile. Apple's media service doesn't share album art, so it's a rich gradient with a
+     large note. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="28dp" />
+    <gradient
+        android:angle="315"
+        android:endColor="#2A1F4D"
+        android:startColor="@color/tile_music" />
+</shape>

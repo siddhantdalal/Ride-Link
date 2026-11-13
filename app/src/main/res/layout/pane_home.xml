@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home, portrait: the readiness gauge above a 2×2 grid of Map, Music, Calls and Setup. Landscape is in layout-land. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_screen"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <include
+        layout="@layout/dashboard_gauge"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/status_detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="2"
+        android:paddingHorizontal="8dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp" />
+
+    <include
+        layout="@layout/dashboard_tiles"
+        android:layout_width="match_parent"
+        android:layout_height="272dp"
+        android:layout_marginTop="14dp" />
+</LinearLayout>

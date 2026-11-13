@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Calls screen: whether the iPhone's calls are linked, and how calling works from the bike. The call itself appears
+     as the incoming-call bar on every screen. It's centred, so it works in both orientations. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_screen"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <FrameLayout
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:background="@drawable/bg_calls_halo">
+
+        <ImageView
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_call"
+            android:tint="@color/tile_calls" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/calls_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:accessibilityLiveRegion="polite"
+        android:fontFamily="@font/space_grotesk"
+        android:gravity="center"
+        android:textColor="@color/text_primary"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:lineSpacingExtra="2dp"
+        android:maxWidth="440dp"
+        android:text="@string/calls_explained"
+        android:textColor="@color/text_secondary"
+        android:textSize="15sp" />
+
+    <Button
+        android:id="@+id/calls_setup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_pill"
+        android:fontFamily="sans-serif-medium"
+        android:minWidth="160dp"
+        android:minHeight="56dp"
+        android:paddingHorizontal="24dp"
+        android:stateListAnimator="@null"
+        android:text="@string/calls_set_up"
+        android:textAllCaps="false"
+        android:textColor="@color/on_accent"
+        android:textSize="16sp"
+        android:visibility="gone" />
+</LinearLayout>

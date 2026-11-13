@@ -16,7 +16,7 @@
         android:orientation="horizontal">
 
         <include
-            android:id="@+id/tile_navigate"
+            android:id="@+id/tile_map"
             layout="@layout/dashboard_tile"
             android:layout_width="0dp"
             android:layout_height="match_parent"

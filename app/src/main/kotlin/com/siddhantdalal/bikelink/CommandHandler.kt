@@ -12,7 +12,7 @@ import org.json.JSONObject
  * speak.
  *
  *     GET  /status                        Is the bike phone ready?
- *     POST /navigate   {"to": "<place>"}  Two-wheeler navigation on the ride screen
+ *     POST /navigate   {"to": "<place>"}  Two-wheeler navigation on the car screen
  *     POST /stop                          End the ride
  *
  * Every request must carry the bike code in the X-Bike-Code header. This runs on the command server's thread,
@@ -36,7 +36,7 @@ class CommandHandler(private val context: Context, private val bikeCode: String)
 
     private fun navigate(body: String): HttpResponse {
         val command = navigateCommand(body) ?: return reply(400, "No destination was sent.")
-        if (!canOpenRideScreen()) return setupNeeded()
+        if (!canOpenCarScreen()) return setupNeeded()
         if (!RouteBudget.hasRoom(context)) {
             return reply(429, "Bike Link's navigation limit is used up. It resets tomorrow, or next month at the latest.")
         }
@@ -47,18 +47,18 @@ class CommandHandler(private val context: Context, private val bikeCode: String)
         val (latitude, longitude) = destination.coordinates()
             ?: PlaceGeocoder.locate(context, destination.query)
             ?: return reply(422, "Couldn't find \"${destination.label}\" on the map. Try adding the area or city.")
-        RideActivity.navigate(context, latitude, longitude, destination.label, command.simulate)
+        MainActivity.navigate(context, latitude, longitude, destination.label, command.simulate)
         return reply(200, "Navigating to ${destination.label}.")
     }
 
     private fun stop(): HttpResponse =
-        if (RideActivity.stop()) reply(200, "Ride stopped.") else reply(409, "There's no ride to stop.")
+        if (MainActivity.stopRide()) reply(200, "Ride stopped.") else reply(409, "There's no ride to stop.")
 
     /**
      * Android blocks background apps from opening a screen (Android 10+), unless the user granted "Display over other
-     * apps". Without it, the ride screen silently wouldn't open, so the rider is told to finish setup instead.
+     * apps". Without it, the car screen silently wouldn't open, so the rider is told to finish setup instead.
      */
-    private fun canOpenRideScreen() =
+    private fun canOpenCarScreen() =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || Settings.canDrawOverlays(context)
 
     private fun setupNeeded() =

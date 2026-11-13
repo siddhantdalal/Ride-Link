@@ -1,304 +1,309 @@
 package com.siddhantdalal.bikelink
 
 import android.app.Activity
+import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
-import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
+import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.view.WindowManager
-import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
+import com.google.android.libraries.navigation.NavigationView
+import java.lang.ref.WeakReference
 
 /**
- * The dashboard, Bike Link's home screen: the clock, the iPhone link, a speedometer-style status gauge, and large
- * tiles for Navigate, Music, Calls and Setup.
+ * The car screen: Bike Link's take on CarPlay, and the app's only main screen.
  *
- * The real work happens in [BikeLinkService]. This screen reflects it live: it updates when Wi-Fi changes, when a
- * command arrives from the iPhone, and when setup steps are completed.
+ * One live map (Google's navigation can only show its map in one place) with screens switched around it from the
+ * sidebar (the bottom bar in portrait): Dashboard (the map with next-turn, now-playing and trip cards), Map, Music,
+ * Calls and Home. Music, Calls and Home cover the map, which keeps running underneath, so guidance never stops. An
+ * incoming call shows as a compact bar over whatever is open.
+ *
+ * Commands from the iPhone arrive as intents (singleTask), and [RideController] does the navigating.
  */
 class MainActivity : Activity() {
 
-    private enum class Status(
-        val color: Int,
-        val progress: Float,
-        val breathing: Boolean,
-        val word: Int,
-        val caption: Int,
-    ) {
-        STARTING(R.color.status_idle, 0.12f, false, R.string.status_word_starting, R.string.status_caption_starting),
-        SETUP(R.color.status_warning, 0.35f, false, R.string.status_word_setup, R.string.status_caption_setup),
-        HOTSPOT(R.color.status_warning, 0.62f, false, R.string.status_word_hotspot, R.string.status_caption_hotspot),
-        READY(R.color.status_ready, 1f, true, R.string.status_word_ready, R.string.status_caption_ready),
+    private lateinit var navigationView: NavigationView
+    private lateinit var ride: RideController
+    private lateinit var navBar: NavBar
+    private lateinit var home: HomePane
+    private lateinit var turnCard: TurnCard
+    private lateinit var dashTrip: TripCard
+    private lateinit var mapTrip: TripCard
+    private lateinit var dashMusic: MusicCard
+    private lateinit var paneMusic: MusicCard
+    private lateinit var callBar: CallBar
+    private lateinit var callsPane: CallsPane
+    private lateinit var banner: TextView
+    private lateinit var dashboardColumn: View
+    private lateinit var dashTurn: View
+    private lateinit var musicScreen: View
+    private lateinit var callsScreen: View
+    private lateinit var homeScreen: View
+
+    private var screen = CarScreen.DASHBOARD
+    private var rideState = RideController.Ride.FREE
+    /** Whether this screen was woken over the lock screen for a ride, so that can be undone when the ride ends. */
+    private var wokenForRide = false
+    /** Whether that ride has actually started. Until it has, the ride hasn't ended either. */
+    private var rideStartedSinceWake = false
+    private val recheckStatus = Runnable { renderStatus() }
+
+    private val batteryReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) = renderBattery(intent)
     }
 
-    private class Tile(root: View) {
-        val title: TextView = root.findViewById(R.id.tile_title)
-        val subtitle: TextView = root.findViewById(R.id.tile_subtitle)
-        val icon: ImageView = root.findViewById(R.id.tile_icon)
-        val iconChip: View = root.findViewById(R.id.tile_icon_chip)
-    }
+    private val rideLogListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> renderRide(rideState) }
 
-    private lateinit var gauge: RideGaugeView
-    private lateinit var gaugeGlow: View
-    private lateinit var gaugeCenter: View
-    private lateinit var statusWord: TextView
-    private lateinit var statusCaption: TextView
-    private lateinit var statusDetail: TextView
-    private lateinit var linkDot: View
-    private lateinit var linkLabel: TextView
-    private lateinit var navigateTile: Tile
-    private lateinit var musicTile: Tile
-    private lateinit var callsTile: Tile
-    private lateinit var setupTile: Tile
-    private lateinit var dock: IphoneDock
-
-    private var shownStatus: Status? = null
-    private var glowColor: Int? = null
-    private var glowRadius = 0f
-    private val render = Runnable { render() }
-
-    /** While plugged in (on the bike), keep the screen on so the dashboard stays visible. */
-    private val powerReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) = keepScreenOnWhileCharging(intent)
-    }
-
-    private val rideLogListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> render() }
-
-    private val iphoneListener: (IphoneLink.State) -> Unit = { renderIphoneTiles(it) }
+    private val iphoneListener: (IphoneLink.State) -> Unit = { renderIphone(it) }
 
     private val wifiCallback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) = renderSoon()
-        override fun onLost(network: Network) = renderSoon()
-        override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) = renderSoon()
+        override fun onAvailable(network: Network) = renderStatusSoon()
+        override fun onLost(network: Network) = renderStatusSoon()
+        override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) = renderStatusSoon()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        gauge = findViewById(R.id.gauge)
-        gaugeGlow = findViewById(R.id.gauge_glow)
-        gaugeCenter = findViewById(R.id.gauge_center)
-        statusWord = findViewById(R.id.status_word)
-        statusCaption = findViewById(R.id.status_caption)
-        statusDetail = findViewById(R.id.status_detail)
-        linkDot = findViewById(R.id.link_dot)
-        linkLabel = findViewById(R.id.link_label)
+        navigationView = findViewById(R.id.navigation_view)
+        banner = findViewById(R.id.ride_banner)
+        dashboardColumn = findViewById(R.id.dashboard_column)
+        dashTurn = findViewById(R.id.dash_turn)
+        musicScreen = findViewById(R.id.pane_music)
+        callsScreen = findViewById(R.id.pane_calls)
+        homeScreen = findViewById(R.id.pane_home)
 
-        navigateTile = tile(R.id.tile_navigate, R.drawable.ic_navigation, R.color.tile_navigate, R.string.tile_navigate) {
-            RideActivity.openMap(this)
-        }
-        musicTile = tile(R.id.tile_music, R.drawable.ic_music_note, R.color.tile_music, R.string.tile_music, ::onMusic)
-        callsTile = tile(R.id.tile_calls, R.drawable.ic_call, R.color.tile_calls, R.string.tile_calls, ::onCalls)
-        setupTile = tile(R.id.tile_setup, R.drawable.ic_settings, R.color.tile_setup, R.string.tile_setup, ::openSetup)
-        dock = IphoneDock(this)
+        navigationView.onCreate(savedInstanceState)
+        ride = RideController(this, navigationView, ::renderRide)
+        navBar = NavBar(this, ::show)
+        home = HomePane(this, ::show)
+        turnCard = TurnCard(dashTurn, onRideAgain = { ride.rideAgain() }, onOpenMap = { show(CarScreen.MAP) })
+        dashTrip = TripCard(findViewById(R.id.dash_trip)) { ride.endRide() }
+        mapTrip = TripCard(findViewById(R.id.map_trip)) { ride.endRide() }
+        dashMusic = MusicCard(findViewById(R.id.dash_music)) { show(CarScreen.MUSIC) }
+        paneMusic = MusicCard(musicScreen)
+        callBar = CallBar(findViewById(R.id.call_bar))
+        callsPane = CallsPane(callsScreen) { startActivity(Intent(this, SetupActivity::class.java)) }
 
-        findViewById<View>(R.id.gauge_frame).apply {
-            setOnClickListener { if (shownStatus == Status.SETUP) openSetup() }
-            addOnLayoutChangeListener { frame, _, _, _, _, _, _, _, _ -> fitGauge(frame.width, frame.height) }
+        screen = savedInstanceState?.getString(KEY_SCREEN)
+            ?.let { saved -> CarScreen.entries.firstOrNull { it.name == saved } }
+            ?: CarScreen.DASHBOARD
+        current = WeakReference(this)
+        // After a rotation the ride is already running. Handling the original intent again would request, and pay
+        // for, the same route twice.
+        val command = intent.takeIf { savedInstanceState == null }
+        if (command?.action == RideController.ACTION_NAVIGATE) wakeForRide()
+        ride.start(command)
+        show(screen)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.action == RideController.ACTION_NAVIGATE) {
+            wakeForRide()
+            show(CarScreen.DASHBOARD)
         }
+        ride.handle(intent)
+    }
+
+    // NavigationView needs every lifecycle call forwarded.
+    override fun onStart() {
+        super.onStart()
+        navigationView.onStart()
     }
 
     override fun onResume() {
         super.onResume()
+        navigationView.onResume()
         BikeLinkService.start(this)
-        render()
-        // The service starts asynchronously, so check again once it has had a moment to start.
-        gauge.postDelayed(render, STATUS_RECHECK_MS)
-        registerReceiver(powerReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))?.let(::keepScreenOnWhileCharging)
+        registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))?.let(::renderBattery)
         RideLog.prefs(this).registerOnSharedPreferenceChangeListener(rideLogListener)
+        IphoneLink.addListener(iphoneListener)
         val wifi = NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build()
         getSystemService(ConnectivityManager::class.java).registerNetworkCallback(wifi, wifiCallback)
-        IphoneLink.addListener(iphoneListener)
-        dock.attach()
+        renderStatus()
+        // The background service starts asynchronously, so check again once it has had a moment.
+        banner.postDelayed(recheckStatus, STATUS_RECHECK_MS)
     }
 
     override fun onPause() {
-        dock.detach()
-        IphoneLink.removeListener(iphoneListener)
-        gauge.removeCallbacks(render)
-        unregisterReceiver(powerReceiver)
-        RideLog.prefs(this).unregisterOnSharedPreferenceChangeListener(rideLogListener)
+        banner.removeCallbacks(recheckStatus)
         getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(wifiCallback)
+        IphoneLink.removeListener(iphoneListener)
+        RideLog.prefs(this).unregisterOnSharedPreferenceChangeListener(rideLogListener)
+        unregisterReceiver(batteryReceiver)
+        navigationView.onPause()
         super.onPause()
     }
 
+    override fun onStop() {
+        navigationView.onStop()
+        super.onStop()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(KEY_SCREEN, screen.name)
+        navigationView.onSaveInstanceState(outState)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        navigationView.onConfigurationChanged(newConfig)
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        navigationView.onTrimMemory(level)
+    }
+
+    override fun onDestroy() {
+        // Leaving the app (Back) ends the ride. A rotation only recreates the screen.
+        ride.release(finishing = isFinishing)
+        navigationView.onDestroy()
+        if (current?.get() === this) current = null
+        super.onDestroy()
+    }
+
+    /** Switches screens. The map stays live underneath all of them. */
+    private fun show(target: CarScreen) {
+        screen = target
+        dashboardColumn.visibility = visibleOn(CarScreen.DASHBOARD)
+        dashTurn.visibility = visibleOn(CarScreen.DASHBOARD) // in portrait it floats over the map, outside the column
+        musicScreen.visibility = visibleOn(CarScreen.MUSIC)
+        callsScreen.visibility = visibleOn(CarScreen.CALLS)
+        homeScreen.visibility = visibleOn(CarScreen.HOME)
+        // The full Map screen uses Google's own turn banner. The Dashboard has its own next-turn card instead.
+        navigationView.setHeaderEnabled(target == CarScreen.MAP)
+        navBar.select(target)
+        renderRide(rideState)
+        if (target == CarScreen.HOME) renderStatus()
+    }
+
+    private fun visibleOn(target: CarScreen) = if (screen == target) View.VISIBLE else View.GONE
+
+    private fun renderRide(state: RideController.Ride) {
+        rideState = state
+        banner.text = state.message
+        banner.visibility = if (state.message == null) View.GONE else View.VISIBLE
+        turnCard.render(state, RideLog.last(this))
+        dashTrip.render(state, visibleHere = screen == CarScreen.DASHBOARD)
+        mapTrip.render(state, visibleHere = screen == CarScreen.MAP)
+        home.renderRide(state)
+        if (wokenForRide) {
+            // Keep showing over the lock screen until the ride that woke the phone has started and then ended.
+            if (state.guiding || state.routing) {
+                rideStartedSinceWake = true
+            } else if (rideStartedSinceWake) {
+                releaseLockScreen()
+            }
+        }
+    }
+
+    private fun renderIphone(state: IphoneLink.State) {
+        dashMusic.render(state)
+        paneMusic.render(state)
+        callBar.render(state.call)
+        callsPane.render(state)
+        home.renderIphone(state)
+        navBar.renderLinks(onIphoneHotspot(), state.status)
+    }
+
+    private fun renderStatus() {
+        val missing = SetupChecklist(this).steps().count { it.required && !it.done }
+        home.renderStatus(BikeLinkService.isRunning, missing, HotspotLink.localAddress())
+        navBar.renderLinks(onIphoneHotspot(), IphoneLink.state.status)
+    }
+
     /** Network callbacks arrive on a background thread. */
-    private fun renderSoon() {
-        gauge.post(render)
+    private fun renderStatusSoon() {
+        banner.post(recheckStatus)
     }
 
-    private fun render() {
-        val steps = SetupChecklist(this).steps()
-        val missing = steps.count { it.required && !it.done }
-        renderStatus(setupDone = missing == 0)
-        renderNavigateTile()
-        renderSetupTile(missing)
-    }
+    private fun onIphoneHotspot(): Boolean = HotspotLink.localAddress()?.let(HotspotLink::isIphoneHotspot) == true
 
-    private fun renderStatus(setupDone: Boolean) {
-        val address = HotspotLink.localAddress()
-        val onHotspot = address != null && HotspotLink.isIphoneHotspot(address)
-        val status = when {
-            !BikeLinkService.isRunning -> Status.STARTING
-            !setupDone -> Status.SETUP
-            !onHotspot -> Status.HOTSPOT
-            else -> Status.READY
-        }
-        val color = getColor(status.color)
-        gauge.setState(color, status.progress, status.breathing)
-        if (status != shownStatus) {
-            shownStatus = status
-            glowColor = color
-            applyGlow()
-        }
-        statusWord.setText(status.word)
-        statusCaption.setText(status.caption)
-        statusDetail.text = when (status) {
-            Status.STARTING -> getString(R.string.status_detail_starting)
-            Status.SETUP -> getString(R.string.status_detail_setup)
-            Status.HOTSPOT -> address?.let { getString(R.string.status_detail_other_wifi, it) }
-                ?: getString(R.string.status_detail_no_wifi)
-            Status.READY -> getString(R.string.status_detail_ready, address)
-        }
-
-        linkDot.background.mutate().setTint(getColor(if (onHotspot) R.color.status_ready else R.color.status_warning))
-        linkLabel.setText(if (onHotspot) R.string.link_ready else R.string.link_missing)
-    }
-
-    private fun renderNavigateTile() {
-        val last = RideLog.last(this)
-        navigateTile.subtitle.text = if (RideActivity.isOpen && last != null && !last.ended) {
-            getString(R.string.tile_navigate_riding, last.destination)
-        } else {
-            getString(R.string.tile_navigate_map)
-        }
-    }
-
-    /** The Music and Calls tiles follow the Bluetooth link to the iPhone. */
-    private fun renderIphoneTiles(state: IphoneLink.State) {
-        val notReady = when (state.status) {
-            IphoneLink.Status.UNSUPPORTED -> R.string.link_unsupported
-            IphoneLink.Status.BLUETOOTH_OFF -> R.string.link_bluetooth_off
-            IphoneLink.Status.PERMISSION_NEEDED -> R.string.link_permission
-            IphoneLink.Status.WAITING, IphoneLink.Status.CONNECTING -> R.string.link_waiting
-            IphoneLink.Status.CONNECTED -> null
-        }
-        val music = state.music
-        musicTile.subtitle.text = when {
-            notReady != null -> getString(notReady)
-            music == null -> getString(R.string.music_nothing)
-            music.artist.isBlank() -> music.title
-            else -> getString(R.string.music_now, music.title, music.artist)
-        }
-        val call = state.call
-        callsTile.subtitle.text = when {
-            notReady != null -> getString(notReady)
-            call != null -> getString(R.string.calls_ringing, call.caller.ifBlank { getString(R.string.caller_unknown) })
-            else -> getString(R.string.calls_ready)
-        }
-    }
-
-    /** With the iPhone linked, the Music tile is a big play/pause button; otherwise it leads to setup. */
-    private fun onMusic() {
-        if (IphoneLink.state.status == IphoneLink.Status.CONNECTED) {
-            IphoneLink.media(Ams.Command.TOGGLE_PLAY_PAUSE)
-        } else {
-            openSetup()
-        }
-    }
-
-    private fun onCalls() {
-        if (IphoneLink.state.status == IphoneLink.Status.CONNECTED) {
-            Toast.makeText(this, R.string.calls_hint, Toast.LENGTH_SHORT).show()
-        } else {
-            openSetup()
-        }
-    }
-
-    private fun renderSetupTile(missing: Int) {
-        if (missing == 0) {
-            setupTile.subtitle.setText(R.string.tile_setup_done)
-            setupTile.subtitle.setTextColor(getColor(R.color.text_secondary))
-        } else {
-            setupTile.subtitle.text = resources.getQuantityString(R.plurals.tile_setup_left, missing, missing)
-            setupTile.subtitle.setTextColor(getColor(R.color.status_warning))
-        }
-    }
-
-    private fun tile(id: Int, icon: Int, color: Int, title: Int, onClick: () -> Unit): Tile {
-        val root = findViewById<View>(id)
-        val tint = getColor(color)
-        return Tile(root).apply {
-            this.title.setText(title)
-            this.icon.setImageResource(icon)
-            this.icon.setColorFilter(tint)
-            iconChip.background.mutate().setTint(tint.withAlpha(0.16f))
-            root.setOnClickListener { onClick() }
-        }
-    }
-
-    /**
-     * The gauge is as big as its space allows: large in portrait, smaller in landscape. The motorbike and status word
-     * scale with it so they always sit inside the ring of tick marks, and the glow is sized to fade out before the
-     * gauge's edges, so it's never cut off.
-     */
-    private fun fitGauge(width: Int, height: Int) {
-        val dp = resources.displayMetrics.density
-        val size = minOf(width, height)
-        val innerRadius = size / 2f - GAUGE_EDGE_DP * dp
-        val scale = (innerRadius / (CENTER_HALF_WIDTH_DP * dp)).coerceIn(MIN_CENTER_SCALE, 1f)
-        gaugeCenter.scaleX = scale
-        gaugeCenter.scaleY = scale
-        if (size / 2f != glowRadius) {
-            glowRadius = size / 2f
-            applyGlow()
-        }
-    }
-
-    /** A soft radial glow in the status colour, behind the gauge. */
-    private fun applyGlow() {
-        val color = glowColor ?: return
-        if (glowRadius <= 0f) return
-        gaugeGlow.background = GradientDrawable().apply {
-            gradientType = GradientDrawable.RADIAL_GRADIENT
-            gradientRadius = glowRadius
-            colors = intArrayOf(color.withAlpha(0.20f), Color.TRANSPARENT)
-        }
-    }
-
-    private fun openSetup() {
-        startActivity(Intent(this, SetupActivity::class.java))
-    }
-
-    private fun keepScreenOnWhileCharging(batteryStatus: Intent) {
-        val pluggedIn = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0
-        if (pluggedIn) {
+    /** The battery indicator, and keeping the screen on while the bike is charging the phone. */
+    private fun renderBattery(status: Intent) {
+        val level = status.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+        val scale = status.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+        val charging = status.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0
+        if (level >= 0 && scale > 0) navBar.renderBattery(level * 100 / scale, charging)
+        if (charging) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
 
-    private companion object {
-        const val STATUS_RECHECK_MS = 1_000L
+    /** A ride can arrive while the phone sleeps on the mount: wake it, and get past a swipe-only lock screen. */
+    private fun wakeForRide() {
+        wokenForRide = true
+        rideStartedSinceWake = false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        } else {
+            @Suppress("DEPRECATION")
+            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+        }
+        getSystemService(KeyguardManager::class.java).requestDismissKeyguard(this, null)
+    }
 
-        // From the gauge's edge to just inside its tick marks: glow room + tick inset + tick length + a margin.
-        const val GAUGE_EDGE_DP = 60f
+    /** After the ride, the screen goes back to respecting the lock screen. */
+    private fun releaseLockScreen() {
+        wokenForRide = false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(false)
+            setTurnScreenOn(false)
+        } else {
+            @Suppress("DEPRECATION")
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+        }
+    }
 
-        // Half the width of the status word's box (170dp), the widest part of the centre group.
-        const val CENTER_HALF_WIDTH_DP = 85f
-        const val MIN_CENTER_SCALE = 0.5f
+    companion object {
+        private const val KEY_SCREEN = "screen"
+        private const val STATUS_RECHECK_MS = 1_000L
+
+        // Weak, so a finished screen can always be freed. The command thread only needs it while it's open.
+        @Volatile
+        private var current: WeakReference<MainActivity>? = null
+        private val mainThread = Handler(Looper.getMainLooper())
+
+        /** Starts two-wheeler navigation, or switches the current ride to a new destination. */
+        fun navigate(context: Context, latitude: Double, longitude: Double, label: String, simulate: Boolean = false) {
+            context.startActivity(
+                Intent(context, MainActivity::class.java)
+                    .setAction(RideController.ACTION_NAVIGATE)
+                    .putExtra(RideController.EXTRA_LATITUDE, latitude)
+                    .putExtra(RideController.EXTRA_LONGITUDE, longitude)
+                    .putExtra(RideController.EXTRA_LABEL, label)
+                    .putExtra(RideController.EXTRA_SIMULATE, simulate)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        }
+
+        /** Ends the current ride. Returns false if there wasn't one. Safe to call from any thread. */
+        fun stopRide(): Boolean {
+            if (!RideController.guidingNow) return false
+            val screen = current?.get()?.takeUnless { it.isFinishing || it.isDestroyed } ?: return false
+            mainThread.post { screen.ride.endRide() }
+            return true
+        }
     }
 }

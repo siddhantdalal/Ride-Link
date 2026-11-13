@@ -2,6 +2,27 @@
 <resources>
     <string name="app_name">Bike Link</string>
 
+    <!-- Car screen: sidebar / bottom bar -->
+    <string name="nav_map">Map</string>
+    <string name="nav_music">Music</string>
+    <string name="nav_calls">Calls</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="status_hotspot_on">iPhone hotspot connected</string>
+    <string name="status_hotspot_off">Not on the iPhone hotspot</string>
+    <string name="status_bluetooth_on">iPhone Bluetooth connected</string>
+    <string name="status_bluetooth_off">iPhone Bluetooth not connected</string>
+    <string name="battery_level">%1$d%%</string>
+    <string name="battery_charging">Battery %1$d%%, charging</string>
+    <string name="battery_not_charging">Battery %1$d%%, not charging</string>
+
+    <!-- Car screen: cards and screens -->
+    <string name="turn_starting">Starting…</string>
+    <string name="turn_finding">Finding route…</string>
+    <string name="turn_rerouting">Rerouting…</string>
+    <string name="calls_explained">Your iPhone\'s calls ring here, over any screen, with Answer and Decline. To call someone, ask Siri through your helmet intercom.</string>
+    <string name="calls_set_up">Set up</string>
+
     <!-- Dashboard: status gauge -->
     <string name="status_word_ready">READY</string>
     <string name="status_caption_ready">to ride</string>
@@ -17,15 +38,9 @@
     <string name="status_caption_starting">starting</string>
     <string name="status_detail_starting">Getting ready to listen for your iPhone.</string>
 
-    <string name="link_ready">iPhone linked</string>
-    <string name="link_missing">No iPhone link</string>
 
     <!-- Dashboard: tiles -->
-    <string name="tile_navigate">Navigate</string>
     <string name="tile_navigate_riding">Riding to %1$s</string>
-    <string name="tile_navigate_map">Open the map</string>
-    <string name="tile_music">Music</string>
-    <string name="tile_calls">Calls</string>
     <string name="link_unsupported">Needs Android 12 or newer</string>
     <string name="link_bluetooth_off">Turn on Bluetooth</string>
     <string name="link_permission">Allow Bluetooth in Setup</string>
@@ -34,7 +49,6 @@
     <string name="music_now">%1$s · %2$s</string>
     <string name="calls_ready">Ready for calls</string>
     <string name="calls_ringing">%1$s is calling</string>
-    <string name="calls_hint">Calls appear here when your iPhone rings.</string>
     <string name="caller_unknown">Unknown caller</string>
     <string name="tile_setup">Setup</string>
     <string name="tile_setup_done">All set</string>
