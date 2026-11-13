@@ -1,127 +1,339 @@
 package com.siddhantdalal.bikelink
 
 import android.app.Activity
+import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.format.DateFormat
 import android.view.View
 import android.view.WindowManager
-import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.TextView
+import com.google.android.libraries.navigation.NavigationApi
+import com.google.android.libraries.navigation.NavigationView
+import com.google.android.libraries.navigation.Navigator
+import com.google.android.libraries.navigation.RoutingOptions
+import com.google.android.libraries.navigation.SimulationOptions
+import com.google.android.libraries.navigation.StylingOptions
+import com.google.android.libraries.navigation.Waypoint
+import java.lang.ref.WeakReference
 import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
- * The ride screen: the next turn in a large card, the map, the trip, and a dock for music and calls.
+ * The ride screen: Google's turn-by-turn navigation in two-wheeler mode, with Bike Link's trip strip below the map.
  *
- * It renders from a [State], so live data plugs straight in: Google navigation will provide the turn and trip, and
- * the Bluetooth link the music and calls. Until then it opens as a clearly labelled preview with sample data, so the
- * design can be tried on the bike.
+ * There's only ever one ride screen (singleTask), and commands arrive at it as intents: a new destination replaces
+ * the current route, and Stop Ride ends it. Google's Navigator is shared across the app. This screen requests it
+ * (Google asks the rider to accept its terms the first time), sets the route and starts guidance.
  */
 class RideActivity : Activity() {
 
-    enum class Turn(val icon: Int) {
-        STRAIGHT(R.drawable.ic_straight),
-        LEFT(R.drawable.ic_turn_left),
-        RIGHT(R.drawable.ic_turn_right),
-    }
+    private lateinit var navigationView: NavigationView
+    private lateinit var banner: TextView
+    private lateinit var tripTime: TextView
+    private lateinit var tripMeta: TextView
 
-    data class NowPlaying(val title: String, val artist: String, val playing: Boolean)
+    private var navigator: Navigator? = null
+    /** A command that arrived before Google's navigator was ready. */
+    private var waiting: Intent? = null
 
-    data class State(
-        val turn: Turn,
-        val distanceToTurn: String,
-        val road: String,
-        val timeLeft: String,
-        val distanceLeft: String,
-        val arrival: String,
-        val nowPlaying: NowPlaying?,
-        val caller: String?,
-    )
-
-    private lateinit var state: State
+    private val tripListener = Navigator.RemainingTimeOrDistanceChangedListener { renderTrip() }
+    private val arrivalListener = Navigator.ArrivalListener { onArrived() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_ride)
+        showOverLockScreen()
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        state = previewState().restoredFrom(savedInstanceState)
+        setContentView(R.layout.activity_ride)
+        navigationView = findViewById(R.id.navigation_view)
+        banner = findViewById(R.id.ride_banner)
+        tripTime = findViewById(R.id.trip_time)
+        tripMeta = findViewById(R.id.trip_meta)
+        findViewById<View>(R.id.end_ride).setOnClickListener { endRide() }
 
-        findViewById<View>(R.id.end_ride).setOnClickListener { finish() }
-        findViewById<View>(R.id.music_play).setOnClickListener {
-            state.nowPlaying?.let { update(state.copy(nowPlaying = it.copy(playing = !it.playing))) }
-        }
-        findViewById<View>(R.id.call_accept).setOnClickListener { update(state.copy(caller = null)) }
-        findViewById<View>(R.id.call_decline).setOnClickListener { update(state.copy(caller = null)) }
-        render()
+        navigationView.onCreate(savedInstanceState)
+        styleNavigation()
+        current = WeakReference(this)
+        // After a rotation the route is already set. Handling the original intent again would request, and pay for,
+        // the same route twice.
+        if (savedInstanceState == null) waiting = intent
+        renderTrip()
+        requestNavigator()
     }
 
-    // Turning the phone recreates the screen, so keep what the rider already did: a declined call stays gone, and
-    // paused music stays paused.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (navigator == null) waiting = intent else handle(intent)
+    }
+
+    // NavigationView needs every lifecycle call forwarded.
+    override fun onStart() {
+        super.onStart()
+        navigationView.onStart()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        navigationView.onResume()
+    }
+
+    override fun onPause() {
+        navigationView.onPause()
+        super.onPause()
+    }
+
+    override fun onStop() {
+        navigationView.onStop()
+        super.onStop()
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putBoolean(KEY_CALL_HANDLED, state.caller == null)
-        state.nowPlaying?.let { outState.putBoolean(KEY_PLAYING, it.playing) }
+        navigationView.onSaveInstanceState(outState)
     }
 
-    private fun State.restoredFrom(saved: Bundle?): State {
-        if (saved == null) return this
-        return copy(
-            caller = caller.takeUnless { saved.getBoolean(KEY_CALL_HANDLED) },
-            nowPlaying = nowPlaying?.let { it.copy(playing = saved.getBoolean(KEY_PLAYING, it.playing)) },
-        )
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        navigationView.onConfigurationChanged(newConfig)
     }
 
-    private fun update(newState: State) {
-        state = newState
-        render()
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        navigationView.onTrimMemory(level)
     }
 
-    private fun render() {
-        findViewById<ImageView>(R.id.maneuver_icon).setImageResource(state.turn.icon)
-        findViewById<TextView>(R.id.maneuver_distance).text = state.distanceToTurn
-        findViewById<TextView>(R.id.maneuver_road).text = state.road
-        findViewById<TextView>(R.id.trip_time).text = state.timeLeft
-        findViewById<TextView>(R.id.trip_meta).text = getString(R.string.trip_meta, state.distanceLeft, state.arrival)
+    override fun onDestroy() {
+        navigator?.let {
+            it.removeRemainingTimeOrDistanceChangedListener(tripListener)
+            it.removeArrivalListener(arrivalListener)
+            // Leaving the ride screen (Back, or End ride) ends the ride. A rotation only recreates the screen.
+            if (isFinishing) stopNavigation(it)
+        }
+        navigationView.onDestroy()
+        if (current?.get() === this) current = null
+        super.onDestroy()
+    }
 
-        // The dock shows one card at a time, like CarPlay: a ringing call takes the music card's place, so its buttons
-        // can be large enough for gloves.
-        val caller = state.caller
-        val music = state.nowPlaying.takeIf { caller == null }
-        findViewById<View>(R.id.call_card).visibility = if (caller == null) View.GONE else View.VISIBLE
-        findViewById<TextView>(R.id.call_name).text = caller
-        findViewById<View>(R.id.music_card).visibility = if (music == null) View.GONE else View.VISIBLE
-        if (music != null) {
-            findViewById<TextView>(R.id.music_title).text = music.title
-            findViewById<TextView>(R.id.music_artist).text = music.artist
-            findViewById<ImageButton>(R.id.music_play)
-                .setImageResource(if (music.playing) R.drawable.ic_pause else R.drawable.ic_play_arrow)
+    private fun requestNavigator() {
+        showBanner(getString(R.string.ride_starting))
+        NavigationApi.getNavigator(this, object : NavigationApi.NavigatorListener {
+            override fun onNavigatorReady(ready: Navigator) {
+                navigator = ready
+                // Voice guidance through the helmet intercom when it's connected, otherwise the phone's speaker.
+                ready.setAudioGuidance(
+                    Navigator.AudioGuidance.VOICE_ALERTS_AND_GUIDANCE or Navigator.AudioGuidance.BLUETOOTH_AUDIO,
+                )
+                ready.addRemainingTimeOrDistanceChangedListener(TRIP_UPDATE_SECONDS, TRIP_UPDATE_METERS, tripListener)
+                ready.addArrivalListener(arrivalListener)
+                hideBanner()
+                renderTrip()
+                waiting?.let(::handle)
+                waiting = null
+            }
+
+            override fun onError(errorCode: Int) {
+                showBanner(getString(navigatorError(errorCode)))
+            }
+        })
+    }
+
+    private fun handle(intent: Intent) {
+        when (intent.action) {
+            ACTION_NAVIGATE -> navigate(
+                latitude = intent.getDoubleExtra(EXTRA_LATITUDE, Double.NaN),
+                longitude = intent.getDoubleExtra(EXTRA_LONGITUDE, Double.NaN),
+                label = intent.getStringExtra(EXTRA_LABEL).orEmpty(),
+                simulate = intent.getBooleanExtra(EXTRA_SIMULATE, false),
+            )
+            ACTION_STOP -> endRide()
         }
     }
 
-    private fun previewState(): State {
-        val arrival = Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(PREVIEW_MINUTES))
-        return State(
-            turn = Turn.RIGHT,
-            distanceToTurn = getString(R.string.preview_distance),
-            road = getString(R.string.preview_road),
-            timeLeft = getString(R.string.preview_time),
-            distanceLeft = getString(R.string.preview_remaining),
-            arrival = DateFormat.getTimeFormat(this).format(arrival),
-            nowPlaying = NowPlaying(getString(R.string.preview_song), getString(R.string.preview_artist), playing = true),
-            caller = getString(R.string.preview_caller),
+    private fun navigate(latitude: Double, longitude: Double, label: String, simulate: Boolean) {
+        val nav = navigator ?: return
+        if (latitude.isNaN() || longitude.isNaN()) return
+        if (!RouteBudget.tryUse(this)) {
+            showBanner(getString(R.string.ride_budget_used, RouteBudget.DAILY_LIMIT, RouteBudget.MONTHLY_LIMIT))
+            return
+        }
+        showBanner(getString(R.string.ride_finding_route, label))
+        val destination = Waypoint.builder().setLatLng(latitude, longitude).setTitle(label).build()
+        val twoWheeler = RoutingOptions().travelMode(RoutingOptions.TravelMode.TWO_WHEELER)
+        nav.setDestination(destination, twoWheeler).setOnResultListener { status ->
+            runOnUiThread { onRouteResult(nav, status, label, latitude, longitude, simulate) }
+        }
+    }
+
+    private fun onRouteResult(
+        nav: Navigator,
+        status: Navigator.RouteStatus,
+        label: String,
+        latitude: Double,
+        longitude: Double,
+        simulate: Boolean,
+    ) {
+        if (status != Navigator.RouteStatus.OK) {
+            showBanner(getString(routeError(status), label))
+            return
+        }
+        hideBanner()
+        nav.startGuidance()
+        // For testing at a desk: Google's simulator rides the route, so the whole screen can be seen working.
+        if (simulate) nav.simulator.simulateLocationsAlongExistingRoute(SimulationOptions().speedMultiplier(SIMULATION_SPEED))
+        RideLog.started(this, label, latitude, longitude)
+        renderTrip()
+    }
+
+    private fun onArrived() {
+        navigator?.let(::stopNavigation)
+        RideLog.ended(this)
+        showBanner(getString(R.string.ride_arrived))
+        renderTrip()
+    }
+
+    private fun endRide() {
+        navigator?.let(::stopNavigation)
+        RideLog.ended(this)
+        finish()
+    }
+
+    private fun stopNavigation(nav: Navigator) {
+        nav.simulator.unsetUserLocation()
+        nav.stopGuidance()
+        nav.clearDestinations()
+    }
+
+    /** The trip strip is always shown, because it holds End ride. Before a route is ready it shows placeholders. */
+    private fun renderTrip() {
+        val trip = navigator?.takeIf { it.isGuidanceRunning }?.currentTimeAndDistance
+        if (trip == null) {
+            tripTime.text = getString(R.string.trip_time_unknown)
+            tripMeta.text = getString(R.string.trip_waiting)
+            return
+        }
+        val arrival = Date(System.currentTimeMillis() + trip.seconds * 1_000L)
+        tripTime.text = RideFormat.duration(trip.seconds)
+        tripMeta.text = getString(
+            R.string.trip_meta,
+            RideFormat.distance(trip.meters),
+            DateFormat.getTimeFormat(this).format(arrival),
         )
+    }
+
+    private fun showBanner(message: String) {
+        banner.text = message
+        banner.visibility = View.VISIBLE
+    }
+
+    private fun hideBanner() {
+        banner.visibility = View.GONE
+    }
+
+    /** Google's next-turn header in Bike Link's colours: the accent green with dark text, day and night. */
+    private fun styleNavigation() {
+        val accent = getColor(R.color.accent)
+        val onAccent = getColor(R.color.on_accent)
+        navigationView.setStylingOptions(
+            StylingOptions()
+                .primaryDayModeThemeColor(accent)
+                .secondaryDayModeThemeColor(getColor(R.color.accent_dark))
+                .primaryNightModeThemeColor(accent)
+                .secondaryNightModeThemeColor(getColor(R.color.accent_dark))
+                .headerLargeManeuverIconColor(onAccent)
+                .headerSmallManeuverIconColor(onAccent)
+                .headerInstructionsTextColor(onAccent)
+                .headerNextStepTextColor(onAccent)
+                .headerDistanceValueTextColor(onAccent)
+                .headerDistanceUnitsTextColor(onAccent),
+        )
+        // Bike Link's own trip strip replaces Google's ETA card. The speedometer is useful on a bike, so it stays.
+        navigationView.setEtaCardEnabled(false)
+        navigationView.setTripProgressBarEnabled(false)
+        navigationView.setReportIncidentButtonEnabled(false)
+        navigationView.setSpeedometerEnabled(true)
+        navigationView.setSpeedLimitIconEnabled(true)
+    }
+
+    /** A ride command can arrive while the phone sleeps on the mount: wake it, and get past a swipe-only lock screen. */
+    private fun showOverLockScreen() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        } else {
+            @Suppress("DEPRECATION")
+            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+        }
+        getSystemService(KeyguardManager::class.java).requestDismissKeyguard(this, null)
+    }
+
+    private fun navigatorError(code: Int): Int = when (code) {
+        NavigationApi.ErrorCode.NOT_AUTHORIZED -> R.string.ride_error_key
+        NavigationApi.ErrorCode.TERMS_NOT_ACCEPTED -> R.string.ride_error_terms
+        NavigationApi.ErrorCode.NETWORK_ERROR -> R.string.ride_error_network
+        NavigationApi.ErrorCode.LOCATION_PERMISSION_MISSING -> R.string.ride_error_location_permission
+        else -> R.string.ride_error_generic
+    }
+
+    private fun routeError(status: Navigator.RouteStatus): Int = when (status) {
+        Navigator.RouteStatus.NO_ROUTE_FOUND -> R.string.route_error_none
+        Navigator.RouteStatus.NETWORK_ERROR -> R.string.ride_error_network
+        Navigator.RouteStatus.LOCATION_DISABLED -> R.string.route_error_location_off
+        Navigator.RouteStatus.LOCATION_UNKNOWN -> R.string.route_error_no_gps
+        Navigator.RouteStatus.QUOTA_CHECK_FAILED -> R.string.route_error_quota
+        else -> R.string.route_error_generic
     }
 
     companion object {
-        private const val PREVIEW_MINUTES = 16L
-        private const val KEY_CALL_HANDLED = "call_handled"
-        private const val KEY_PLAYING = "playing"
+        private const val ACTION_NAVIGATE = "com.siddhantdalal.bikelink.action.NAVIGATE"
+        private const val ACTION_STOP = "com.siddhantdalal.bikelink.action.STOP"
+        private const val EXTRA_LATITUDE = "latitude"
+        private const val EXTRA_LONGITUDE = "longitude"
+        private const val EXTRA_LABEL = "label"
+        private const val EXTRA_SIMULATE = "simulate"
+        private const val TRIP_UPDATE_SECONDS = 30
+        private const val TRIP_UPDATE_METERS = 100
+        private const val SIMULATION_SPEED = 3f
 
-        fun startPreview(context: Context) {
-            context.startActivity(Intent(context, RideActivity::class.java))
+        // Weak, so a finished screen can always be freed: the Bluetooth and command threads only need to reach the
+        // screen while it's open.
+        @Volatile
+        private var current: WeakReference<RideActivity>? = null
+        private val mainThread = Handler(Looper.getMainLooper())
+
+        /** The open ride screen, ignoring one that's already closing (between finish() and onDestroy()). */
+        private val openScreen: RideActivity?
+            get() = current?.get()?.takeUnless { it.isFinishing || it.isDestroyed }
+
+        val isOpen: Boolean get() = openScreen != null
+
+        /** Starts two-wheeler navigation, or switches the current ride to a new destination. */
+        fun navigate(context: Context, latitude: Double, longitude: Double, label: String, simulate: Boolean = false) {
+            context.startActivity(
+                Intent(context, RideActivity::class.java)
+                    .setAction(ACTION_NAVIGATE)
+                    .putExtra(EXTRA_LATITUDE, latitude)
+                    .putExtra(EXTRA_LONGITUDE, longitude)
+                    .putExtra(EXTRA_LABEL, label)
+                    .putExtra(EXTRA_SIMULATE, simulate)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        }
+
+        /** Brings the current ride back to the front. */
+        fun open(context: Context) {
+            context.startActivity(Intent(context, RideActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
+
+        /** Ends the current ride. Returns false if there wasn't one. Safe to call from any thread. */
+        fun stop(): Boolean {
+            val screen = openScreen ?: return false
+            mainThread.post { screen.endRide() }
+            return true
         }
     }
 }

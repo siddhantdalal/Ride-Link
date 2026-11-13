@@ -11,3 +11,6 @@ local.properties
 .vscode/
 *.iml
 .DS_Store
+
+# API keys (Google Maps Platform). Never commit.
+secrets.properties

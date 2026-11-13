@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ride block: a status message ("Finding a two-wheeler route…", or what went wrong). Hidden when there's nothing
+     to say. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ride_banner"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    android:accessibilityLiveRegion="polite"
+    android:background="@drawable/bg_banner"
+    android:fontFamily="sans-serif-medium"
+    android:gravity="center"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="12dp"
+    android:textColor="@color/status_warning"
+    android:textSize="15sp"
+    android:visibility="gone" />

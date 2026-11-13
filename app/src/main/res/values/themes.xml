@@ -1,16 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Framework Material theme: no AndroidX/Material libraries needed for one screen. -->
+    <!-- Framework Material theme: the screens use framework views, so no Material Components library is needed. -->
     <style name="Theme.BikeLink" parent="@android:style/Theme.Material.NoActionBar">
         <item name="android:colorPrimary">@color/accent</item>
         <item name="android:colorAccent">@color/accent</item>
         <item name="android:windowBackground">@color/bg_bottom</item>
         <item name="android:statusBarColor">@color/bg_top</item>
         <item name="android:navigationBarColor">@color/bg_bottom</item>
-    </style>
-
-    <!-- For LaunchMapsActivity, which never draws anything. -->
-    <style name="Theme.BikeLink.Invisible" parent="@android:style/Theme.Translucent.NoTitleBar">
-        <item name="android:windowAnimationStyle">@null</item>
     </style>
 </resources>

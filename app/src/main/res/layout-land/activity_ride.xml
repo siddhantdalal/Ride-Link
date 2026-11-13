@@ -1,71 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ride screen, landscape (phone mounted sideways): turn card at the top left with the map across the screen, and
-     the trip and dock in a column on the right. The dock shows one card at a time, with calls taking priority. -->
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<!-- Ride screen, landscape (phone mounted sideways). The map fills the whole screen, and Bike Link's cards float in the
+     bottom-right corner, sized to their content. That keeps them clear of Google's next-turn header (top left) and
+     its speedometer and re-centre button (bottom left), and never leaves a blank column. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
 
-    <!-- Google's navigation map replaces this stand-in later. -->
-    <com.siddhantdalal.bikelink.RoutePlaceholderView
-        android:id="@+id/map"
+    <com.google.android.libraries.navigation.NavigationView
+        android:id="@+id/navigation_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:importantForAccessibility="no" />
+        android:layout_height="match_parent" />
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:baselineAligned="false"
-        android:fitsSystemWindows="true"
-        android:orientation="horizontal"
-        android:padding="14dp"
-        tools:ignore="NestedWeights">
+        android:layout_width="320dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="12dp"
+        android:orientation="vertical">
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical">
+        <include layout="@layout/ride_banner" />
 
-            <include layout="@layout/ride_maneuver" />
+        <!-- Music and calls arrive with the Bluetooth link to the iPhone. Until then these stay hidden. -->
+        <include
+            layout="@layout/ride_music"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/preview_banner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_preview_banner"
-                android:fontFamily="sans-serif-medium"
-                android:paddingHorizontal="14dp"
-                android:paddingVertical="6dp"
-                android:singleLine="true"
-                android:text="@string/preview_banner"
-                android:textColor="@color/status_warning"
-                android:textSize="12sp" />
-        </LinearLayout>
+        <include
+            layout="@layout/ride_call"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:visibility="gone" />
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="14dp"
-            android:layout_weight="0.9"
-            android:orientation="vertical">
-
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
-            <include layout="@layout/ride_trip" />
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp">
-
-                <include layout="@layout/ride_music" />
-
-                <include layout="@layout/ride_call" />
-            </FrameLayout>
-        </LinearLayout>
+        <include layout="@layout/ride_trip" />
     </LinearLayout>
-</merge>
+</FrameLayout>

@@ -15,7 +15,6 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.BatteryManager
 import android.os.Bundle
-import android.text.format.DateUtils
 import android.view.View
 import android.view.WindowManager
 import android.widget.ImageView
@@ -92,9 +91,7 @@ class MainActivity : Activity() {
         linkDot = findViewById(R.id.link_dot)
         linkLabel = findViewById(R.id.link_label)
 
-        navigateTile = tile(R.id.tile_navigate, R.drawable.ic_navigation, R.color.tile_navigate, R.string.tile_navigate) {
-            RideActivity.startPreview(this)
-        }
+        navigateTile = tile(R.id.tile_navigate, R.drawable.ic_navigation, R.color.tile_navigate, R.string.tile_navigate, ::onNavigate)
         tile(R.id.tile_music, R.drawable.ic_music_note, R.color.tile_music, R.string.tile_music, ::comingWithBluetooth)
             .subtitle.setText(R.string.tile_bluetooth_next)
         tile(R.id.tile_calls, R.drawable.ic_call, R.color.tile_calls, R.string.tile_calls, ::comingWithBluetooth)
@@ -173,9 +170,19 @@ class MainActivity : Activity() {
     private fun renderNavigateTile() {
         val last = RideLog.last(this)
         navigateTile.subtitle.text = when {
-            last == null -> getString(R.string.tile_navigate_none)
-            last.destination == null -> getString(R.string.tile_navigate_stopped, DateUtils.getRelativeTimeSpanString(last.at))
-            else -> getString(R.string.tile_navigate_last, last.destination)
+            RideActivity.isOpen && last != null && !last.ended -> getString(R.string.tile_navigate_riding, last.destination)
+            last != null -> getString(R.string.tile_navigate_again, last.destination)
+            else -> getString(R.string.tile_navigate_none)
+        }
+    }
+
+    /** Returns to the ride in progress, or rides again to the last destination. New places come from the iPhone. */
+    private fun onNavigate() {
+        val last = RideLog.last(this)
+        when {
+            RideActivity.isOpen -> RideActivity.open(this)
+            last != null -> RideActivity.navigate(this, last.latitude, last.longitude, last.destination)
+            else -> Toast.makeText(this, R.string.navigate_from_iphone, Toast.LENGTH_SHORT).show()
         }
     }
 

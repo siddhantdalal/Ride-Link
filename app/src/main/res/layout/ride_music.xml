@@ -65,6 +65,7 @@
             android:backgroundTint="@color/tile_music"
             android:contentDescription="@string/play_pause"
             android:scaleType="center"
+            android:src="@drawable/ic_play_arrow"
             android:tint="@color/bg_bottom" />
 
         <Space

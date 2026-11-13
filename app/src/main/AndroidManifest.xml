@@ -18,12 +18,12 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
-    <!-- "Display over other apps": lets the app open Google Maps while it's in the background. -->
+    <!-- "Display over other apps": lets the ride screen open when a destination arrives in the background. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
-    <queries>
-        <package android:name="com.google.android.apps.maps" />
-    </queries>
+    <!-- Turn-by-turn navigation needs precise location. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <!-- No backups. allowBackup="false" covers Android 8-11, and the extraction rules cover Android 12+,
          where allowBackup alone no longer stops device-to-device transfer. Lint wants fullBackupContent too,
@@ -37,6 +37,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.BikeLink">
 
+        <!-- The Google Maps Platform key, filled in at build time from secrets.properties (never committed). It only
+             works from this app's package and signing certificate, and only for the Navigation SDK. -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -47,41 +53,21 @@
             </intent-filter>
         </activity>
 
+        <!-- One ride screen at a time: a new destination from the iPhone goes to the open one. -->
         <activity
             android:name=".RideActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTask" />
 
         <activity
             android:name=".SetupActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />
 
-        <!-- Has no screen of its own: wakes and unlocks the phone, opens Google Maps, then closes. -->
-        <activity
-            android:name=".LaunchMapsActivity"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:noHistory="true"
-            android:taskAffinity=""
-            android:theme="@style/Theme.BikeLink.Invisible" />
-
         <service
             android:name=".BikeLinkService"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
-
-        <service
-            android:name=".MapsHelperService"
-            android:exported="true"
-            android:label="@string/maps_helper_label"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/maps_helper" />
-        </service>
 
         <!-- Both are protected broadcasts: only the system can send them. -->
         <receiver

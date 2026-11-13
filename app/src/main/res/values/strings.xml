@@ -22,9 +22,10 @@
 
     <!-- Dashboard: tiles -->
     <string name="tile_navigate">Navigate</string>
-    <string name="tile_navigate_last">Last: %1$s</string>
-    <string name="tile_navigate_stopped">Last ride ended %1$s</string>
+    <string name="tile_navigate_riding">Riding to %1$s</string>
+    <string name="tile_navigate_again">Ride again: %1$s</string>
     <string name="tile_navigate_none">Send a place from your iPhone</string>
+    <string name="navigate_from_iphone">Send a destination from your iPhone to start a ride.</string>
     <string name="tile_music">Music</string>
     <string name="tile_calls">Calls</string>
     <string name="tile_bluetooth_next">Coming next</string>
@@ -40,8 +41,23 @@
     <string name="bike_code_hint">Enter this once in your iPhone Shortcuts. It makes sure only your iPhone can control this phone.</string>
 
     <!-- Ride screen -->
-    <string name="preview_banner">Preview · sample ride</string>
     <string name="end_ride">End ride</string>
+    <string name="ride_starting">Starting navigation…</string>
+    <string name="ride_finding_route">Finding a two-wheeler route to %1$s…</string>
+    <string name="ride_arrived">You\'ve arrived.</string>
+    <string name="ride_budget_used">Bike Link\'s navigation limit is used up (%1$d a day, %2$d a month). It resets tomorrow, or next month at the latest.</string>
+    <string name="ride_error_key">Google rejected the navigation key. Check its restrictions in Google Cloud.</string>
+    <string name="ride_error_terms">Accept Google\'s navigation terms to ride. Open the ride again to see them.</string>
+    <string name="ride_error_network">No internet. Join your iPhone\'s Personal Hotspot.</string>
+    <string name="ride_error_location_permission">Allow location in Setup, then try again.</string>
+    <string name="ride_error_generic">Navigation couldn\'t start. Try again in a moment.</string>
+    <string name="route_error_none">No two-wheeler route to %1$s.</string>
+    <string name="route_error_location_off">Turn on location to navigate.</string>
+    <string name="route_error_no_gps">Waiting for GPS. Move somewhere with a view of the sky.</string>
+    <string name="route_error_quota">Google\'s navigation check failed. Try again in a moment.</string>
+    <string name="route_error_generic">Couldn\'t plan a route to %1$s. Try again.</string>
+    <string name="trip_time_unknown">– min</string>
+    <string name="trip_waiting">Waiting for a route</string>
     <string name="incoming_call">Incoming call</string>
     <string name="accept_call">Answer</string>
     <string name="decline_call">Decline</string>
@@ -49,13 +65,6 @@
     <string name="next_track">Next track</string>
     <string name="play_pause">Play or pause</string>
     <string name="trip_meta">%1$s · arrive %2$s</string>
-    <string name="preview_distance">300 m</string>
-    <string name="preview_road">Turn right onto FC Road</string>
-    <string name="preview_time">16 min</string>
-    <string name="preview_remaining">6.2 km</string>
-    <string name="preview_song">Sunset Highway</string>
-    <string name="preview_artist">Ride Playlist</string>
-    <string name="preview_caller">Mom</string>
 
     <!-- Setup screen -->
     <string name="setup_title">Setup</string>
@@ -66,21 +75,16 @@
     <string name="step_turn_on">Turn on</string>
     <string name="step_done_description">Done</string>
 
+    <string name="step_location">Location</string>
+    <string name="step_location_detail">Needed for turn-by-turn navigation. Choose \"Precise\" and \"While using the app\".</string>
     <string name="step_overlay">Display over other apps</string>
-    <string name="step_overlay_detail">Lets Bike Link open navigation when your iPhone sends a place.</string>
+    <string name="step_overlay_detail">Lets the ride screen open when your iPhone sends a place.</string>
     <string name="step_battery">No battery restrictions</string>
     <string name="step_battery_detail">Stops Android closing Bike Link during a ride.</string>
     <string name="step_notifications">Notifications</string>
     <string name="step_notifications_detail">Shows that Bike Link is running.</string>
     <string name="step_local_network">Local network</string>
     <string name="step_local_network_detail">Lets commands from your iPhone reach this phone over the hotspot.</string>
-    <string name="step_helper">Maps helper (optional)</string>
-    <string name="step_helper_detail">Confirms destination changes and ends rides for you. In the list, open \"Bike Link – Maps helper\".</string>
-    <string name="step_helper_detail_restricted">Confirms destination changes and ends rides for you. If Android calls it restricted: App info → ⋮ → Allow restricted settings.</string>
-
-    <!-- Maps helper (accessibility service) -->
-    <string name="maps_helper_label">Bike Link – Maps helper</string>
-    <string name="maps_helper_description">Taps Google Maps\' \"Yes\" button when you send a new destination mid-ride, and \"Close navigation\" when you send Stop Ride. It only acts for a few seconds after a command from your iPhone, only inside Google Maps, and reads nothing else.</string>
 
     <!-- Notification -->
     <string name="notification_channel">Ride link</string>
