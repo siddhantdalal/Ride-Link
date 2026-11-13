@@ -21,6 +21,14 @@
     <!-- "Display over other apps": lets the ride screen open when a destination arrives in the background. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
+    <!-- Calls and music from the iPhone over Bluetooth Low Energy: advertising so the iPhone can pair, then
+         connecting to Apple's notification and media services. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="false" />
+
     <!-- Turn-by-turn navigation needs precise location. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />

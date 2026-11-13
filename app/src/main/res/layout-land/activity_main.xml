@@ -46,11 +46,24 @@
 
         <include layout="@layout/dashboard_clock" />
 
-        <include
-            layout="@layout/dashboard_tiles"
+        <!-- The tiles, with the iPhone's incoming call shown over them while it rings. -->
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginTop="10dp"
-            android:layout_weight="1" />
+            android:layout_weight="1">
+
+            <include
+                layout="@layout/dashboard_tiles"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <include
+                layout="@layout/ride_call"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:visibility="gone" />
+        </FrameLayout>
     </LinearLayout>
 </LinearLayout>

@@ -28,9 +28,22 @@
         android:textColor="@color/text_secondary"
         android:textSize="14sp" />
 
-    <include
-        layout="@layout/dashboard_tiles"
+    <!-- The tiles, with the iPhone's incoming call shown over them while it rings. -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="272dp"
-        android:layout_marginTop="14dp" />
+        android:layout_marginTop="14dp">
+
+        <include
+            layout="@layout/dashboard_tiles"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <include
+            layout="@layout/ride_call"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:visibility="gone" />
+    </FrameLayout>
 </LinearLayout>

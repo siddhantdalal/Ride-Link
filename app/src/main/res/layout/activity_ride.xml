@@ -22,6 +22,8 @@
 
         <include layout="@layout/ride_banner" />
 
+        <include layout="@layout/ride_again" />
+
         <include layout="@layout/ride_trip" />
 
         <!-- Music and calls arrive with the Bluetooth link to the iPhone. Until then these stay hidden. -->

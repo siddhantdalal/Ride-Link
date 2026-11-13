@@ -43,11 +43,14 @@ class BikeLinkService : Service() {
             null
         }
         isRunning = server != null
+        // The Bluetooth link to the iPhone (calls and music) lives as long as this service.
+        IphoneLink.start(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = START_STICKY
 
     override fun onDestroy() {
+        IphoneLink.stop()
         server?.stop()
         isRunning = false
         super.onDestroy()

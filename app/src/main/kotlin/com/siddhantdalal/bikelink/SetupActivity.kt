@@ -13,6 +13,8 @@ class SetupActivity : Activity() {
 
     private lateinit var summary: TextView
     private lateinit var stepList: LinearLayout
+    /** The pairing step completes on the iPhone, so the list updates live as the link connects. */
+    private val iphoneListener: (IphoneLink.State) -> Unit = { render() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,11 +27,18 @@ class SetupActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        render()
+        IphoneLink.addListener(iphoneListener)
+    }
+
+    override fun onPause() {
+        IphoneLink.removeListener(iphoneListener)
+        super.onPause()
     }
 
     @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        // A newly granted Bluetooth permission lets the link start advertising to the iPhone straight away.
+        IphoneLink.start(this)
         render()
     }
 
@@ -71,7 +80,7 @@ class SetupActivity : Activity() {
         }
         row.findViewById<Button>(R.id.step_action).apply {
             visibility = if (step.done) View.GONE else View.VISIBLE
-            setText(if (step.required) R.string.step_allow else R.string.step_turn_on)
+            setText(step.action)
             setOnClickListener { step.fix() }
         }
         return row

@@ -59,7 +59,10 @@ class MainActivity : Activity() {
     private lateinit var linkDot: View
     private lateinit var linkLabel: TextView
     private lateinit var navigateTile: Tile
+    private lateinit var musicTile: Tile
+    private lateinit var callsTile: Tile
     private lateinit var setupTile: Tile
+    private lateinit var dock: IphoneDock
 
     private var shownStatus: Status? = null
     private var glowColor: Int? = null
@@ -72,6 +75,8 @@ class MainActivity : Activity() {
     }
 
     private val rideLogListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> render() }
+
+    private val iphoneListener: (IphoneLink.State) -> Unit = { renderIphoneTiles(it) }
 
     private val wifiCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) = renderSoon()
@@ -91,12 +96,13 @@ class MainActivity : Activity() {
         linkDot = findViewById(R.id.link_dot)
         linkLabel = findViewById(R.id.link_label)
 
-        navigateTile = tile(R.id.tile_navigate, R.drawable.ic_navigation, R.color.tile_navigate, R.string.tile_navigate, ::onNavigate)
-        tile(R.id.tile_music, R.drawable.ic_music_note, R.color.tile_music, R.string.tile_music, ::comingWithBluetooth)
-            .subtitle.setText(R.string.tile_bluetooth_next)
-        tile(R.id.tile_calls, R.drawable.ic_call, R.color.tile_calls, R.string.tile_calls, ::comingWithBluetooth)
-            .subtitle.setText(R.string.tile_bluetooth_next)
+        navigateTile = tile(R.id.tile_navigate, R.drawable.ic_navigation, R.color.tile_navigate, R.string.tile_navigate) {
+            RideActivity.openMap(this)
+        }
+        musicTile = tile(R.id.tile_music, R.drawable.ic_music_note, R.color.tile_music, R.string.tile_music, ::onMusic)
+        callsTile = tile(R.id.tile_calls, R.drawable.ic_call, R.color.tile_calls, R.string.tile_calls, ::onCalls)
         setupTile = tile(R.id.tile_setup, R.drawable.ic_settings, R.color.tile_setup, R.string.tile_setup, ::openSetup)
+        dock = IphoneDock(this)
 
         findViewById<View>(R.id.gauge_frame).apply {
             setOnClickListener { if (shownStatus == Status.SETUP) openSetup() }
@@ -114,9 +120,13 @@ class MainActivity : Activity() {
         RideLog.prefs(this).registerOnSharedPreferenceChangeListener(rideLogListener)
         val wifi = NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI).build()
         getSystemService(ConnectivityManager::class.java).registerNetworkCallback(wifi, wifiCallback)
+        IphoneLink.addListener(iphoneListener)
+        dock.attach()
     }
 
     override fun onPause() {
+        dock.detach()
+        IphoneLink.removeListener(iphoneListener)
         gauge.removeCallbacks(render)
         unregisterReceiver(powerReceiver)
         RideLog.prefs(this).unregisterOnSharedPreferenceChangeListener(rideLogListener)
@@ -169,20 +179,51 @@ class MainActivity : Activity() {
 
     private fun renderNavigateTile() {
         val last = RideLog.last(this)
-        navigateTile.subtitle.text = when {
-            RideActivity.isOpen && last != null && !last.ended -> getString(R.string.tile_navigate_riding, last.destination)
-            last != null -> getString(R.string.tile_navigate_again, last.destination)
-            else -> getString(R.string.tile_navigate_none)
+        navigateTile.subtitle.text = if (RideActivity.isOpen && last != null && !last.ended) {
+            getString(R.string.tile_navigate_riding, last.destination)
+        } else {
+            getString(R.string.tile_navigate_map)
         }
     }
 
-    /** Returns to the ride in progress, or rides again to the last destination. New places come from the iPhone. */
-    private fun onNavigate() {
-        val last = RideLog.last(this)
-        when {
-            RideActivity.isOpen -> RideActivity.open(this)
-            last != null -> RideActivity.navigate(this, last.latitude, last.longitude, last.destination)
-            else -> Toast.makeText(this, R.string.navigate_from_iphone, Toast.LENGTH_SHORT).show()
+    /** The Music and Calls tiles follow the Bluetooth link to the iPhone. */
+    private fun renderIphoneTiles(state: IphoneLink.State) {
+        val notReady = when (state.status) {
+            IphoneLink.Status.UNSUPPORTED -> R.string.link_unsupported
+            IphoneLink.Status.BLUETOOTH_OFF -> R.string.link_bluetooth_off
+            IphoneLink.Status.PERMISSION_NEEDED -> R.string.link_permission
+            IphoneLink.Status.WAITING, IphoneLink.Status.CONNECTING -> R.string.link_waiting
+            IphoneLink.Status.CONNECTED -> null
+        }
+        val music = state.music
+        musicTile.subtitle.text = when {
+            notReady != null -> getString(notReady)
+            music == null -> getString(R.string.music_nothing)
+            music.artist.isBlank() -> music.title
+            else -> getString(R.string.music_now, music.title, music.artist)
+        }
+        val call = state.call
+        callsTile.subtitle.text = when {
+            notReady != null -> getString(notReady)
+            call != null -> getString(R.string.calls_ringing, call.caller.ifBlank { getString(R.string.caller_unknown) })
+            else -> getString(R.string.calls_ready)
+        }
+    }
+
+    /** With the iPhone linked, the Music tile is a big play/pause button; otherwise it leads to setup. */
+    private fun onMusic() {
+        if (IphoneLink.state.status == IphoneLink.Status.CONNECTED) {
+            IphoneLink.media(Ams.Command.TOGGLE_PLAY_PAUSE)
+        } else {
+            openSetup()
+        }
+    }
+
+    private fun onCalls() {
+        if (IphoneLink.state.status == IphoneLink.Status.CONNECTED) {
+            Toast.makeText(this, R.string.calls_hint, Toast.LENGTH_SHORT).show()
+        } else {
+            openSetup()
         }
     }
 
@@ -239,10 +280,6 @@ class MainActivity : Activity() {
 
     private fun openSetup() {
         startActivity(Intent(this, SetupActivity::class.java))
-    }
-
-    private fun comingWithBluetooth() {
-        Toast.makeText(this, R.string.coming_with_bluetooth, Toast.LENGTH_SHORT).show()
     }
 
     private fun keepScreenOnWhileCharging(batteryStatus: Intent) {

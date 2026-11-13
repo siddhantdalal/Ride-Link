@@ -1,9 +1,12 @@
 package com.siddhantdalal.bikelink
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
@@ -12,7 +15,9 @@ import android.os.Looper
 import android.text.format.DateFormat
 import android.view.View
 import android.view.WindowManager
+import android.widget.Button
 import android.widget.TextView
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.libraries.navigation.NavigationApi
 import com.google.android.libraries.navigation.NavigationView
 import com.google.android.libraries.navigation.Navigator
@@ -36,10 +41,14 @@ class RideActivity : Activity() {
     private lateinit var banner: TextView
     private lateinit var tripTime: TextView
     private lateinit var tripMeta: TextView
+    private lateinit var rideAgain: Button
+    private lateinit var dock: IphoneDock
 
     private var navigator: Navigator? = null
     /** A command that arrived before Google's navigator was ready. */
     private var waiting: Intent? = null
+    /** A route is being requested: stops a second tap from asking (and paying) twice. */
+    private var routing = false
 
     private val tripListener = Navigator.RemainingTimeOrDistanceChangedListener { renderTrip() }
     private val arrivalListener = Navigator.ArrivalListener { onArrived() }
@@ -53,10 +62,13 @@ class RideActivity : Activity() {
         banner = findViewById(R.id.ride_banner)
         tripTime = findViewById(R.id.trip_time)
         tripMeta = findViewById(R.id.trip_meta)
+        rideAgain = findViewById(R.id.ride_again)
+        dock = IphoneDock(this)
         findViewById<View>(R.id.end_ride).setOnClickListener { endRide() }
 
         navigationView.onCreate(savedInstanceState)
         styleNavigation()
+        followRider()
         current = WeakReference(this)
         // After a rotation the route is already set. Handling the original intent again would request, and pay for,
         // the same route twice.
@@ -80,9 +92,11 @@ class RideActivity : Activity() {
     override fun onResume() {
         super.onResume()
         navigationView.onResume()
+        dock.attach()
     }
 
     override fun onPause() {
+        dock.detach()
         navigationView.onPause()
         super.onPause()
     }
@@ -162,6 +176,8 @@ class RideActivity : Activity() {
             return
         }
         showBanner(getString(R.string.ride_finding_route, label))
+        routing = true
+        renderTrip()
         val destination = Waypoint.builder().setLatLng(latitude, longitude).setTitle(label).build()
         val twoWheeler = RoutingOptions().travelMode(RoutingOptions.TravelMode.TWO_WHEELER)
         nav.setDestination(destination, twoWheeler).setOnResultListener { status ->
@@ -177,8 +193,10 @@ class RideActivity : Activity() {
         longitude: Double,
         simulate: Boolean,
     ) {
+        routing = false
         if (status != Navigator.RouteStatus.OK) {
             showBanner(getString(routeError(status), label))
+            renderTrip()
             return
         }
         hideBanner()
@@ -208,12 +226,22 @@ class RideActivity : Activity() {
         nav.clearDestinations()
     }
 
-    /** The trip strip is always shown, because it holds End ride. Before a route is ready it shows placeholders. */
+    /**
+     * The trip strip is always shown, because it holds End ride. Without a route it's a free ride: the map follows the
+     * rider at no cost, and a big button offers the last destination again. Only that tap requests (and counts) a route.
+     */
     private fun renderTrip() {
         val trip = navigator?.takeIf { it.isGuidanceRunning }?.currentTimeAndDistance
+        val last = RideLog.last(this)
+        val offerRideAgain = trip == null && !routing && navigator != null && last != null
+        rideAgain.visibility = if (offerRideAgain) View.VISIBLE else View.GONE
+        if (offerRideAgain && last != null) {
+            rideAgain.text = getString(R.string.ride_again_button, last.destination)
+            rideAgain.setOnClickListener { navigate(last.latitude, last.longitude, last.destination, simulate = false) }
+        }
         if (trip == null) {
-            tripTime.text = getString(R.string.trip_time_unknown)
-            tripMeta.text = getString(R.string.trip_waiting)
+            tripTime.text = getString(R.string.free_ride)
+            tripMeta.text = getString(R.string.free_ride_hint)
             return
         }
         val arrival = Date(System.currentTimeMillis() + trip.seconds * 1_000L)
@@ -232,6 +260,16 @@ class RideActivity : Activity() {
 
     private fun hideBanner() {
         banner.visibility = View.GONE
+    }
+
+    /** Shows the rider on the map and follows them, tilted like a navigation view, with or without a route. */
+    @SuppressLint("MissingPermission") // checked first: location is a required setup step
+    private fun followRider() {
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) return
+        navigationView.getMapAsync { map ->
+            map.isMyLocationEnabled = true
+            map.followMyLocation(GoogleMap.CameraPerspective.TILTED)
+        }
     }
 
     /** Google's next-turn header in Bike Link's colours: the accent green with dark text, day and night. */
@@ -324,8 +362,8 @@ class RideActivity : Activity() {
             )
         }
 
-        /** Brings the current ride back to the front. */
-        fun open(context: Context) {
+        /** Brings the current ride back to the front, or opens the map for a free ride. */
+        fun openMap(context: Context) {
             context.startActivity(Intent(context, RideActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }
 

@@ -3,6 +3,8 @@ package com.siddhantdalal.bikelink
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
+import android.bluetooth.BluetoothManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -19,6 +21,8 @@ class SetupChecklist(private val activity: Activity) {
         val done: Boolean,
         /** Without it, rides can't start. Optional steps add extras. */
         val required: Boolean,
+        /** The button's label. */
+        val action: Int = if (required) R.string.step_allow else R.string.step_turn_on,
         val fix: () -> Unit,
     )
 
@@ -47,6 +51,23 @@ class SetupChecklist(private val activity: Activity) {
                 required = false,
             ))
         }
+        // Calls and music from the iPhone, over Bluetooth. Android 12+ only: older versions can't advertise the
+        // way the iPhone needs to find the phone.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val bluetooth = IphoneLink.requiredPermissions()
+            add(permissionStep(
+                check = bluetooth.first(),
+                request = bluetooth,
+                title = R.string.step_bluetooth,
+                detail = R.string.step_bluetooth_detail,
+                required = false,
+                alsoGranted = bluetooth.toList(),
+            ))
+            val paired = IphoneLink.state.status == IphoneLink.Status.CONNECTED
+            add(Step(R.string.step_pair, R.string.step_pair_detail, paired, required = false, action = R.string.step_show_me) {
+                showPairingSteps()
+            })
+        }
         if (Build.VERSION.SDK_INT >= ANDROID_17) {
             add(permissionStep(
                 check = ACCESS_LOCAL_NETWORK,
@@ -63,9 +84,27 @@ class SetupChecklist(private val activity: Activity) {
         detail: Int,
         required: Boolean,
         request: Array<String> = arrayOf(check),
+        alsoGranted: List<String> = listOf(check),
     ): Step {
-        val granted = activity.checkSelfPermission(check) == PackageManager.PERMISSION_GRANTED
+        val granted = alsoGranted.all { activity.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
         return Step(title, detail, granted, required) { activity.requestPermissions(request, 0) }
+    }
+
+    /** Pairing happens on the iPhone, so this shows the rider what to tap there, including this phone's name. */
+    private fun showPairingSteps() {
+        AlertDialog.Builder(activity, android.R.style.Theme_Material_Dialog_Alert)
+            .setTitle(R.string.pair_title)
+            .setMessage(activity.getString(R.string.pair_steps, bluetoothName()))
+            .setPositiveButton(R.string.ok, null)
+            .show()
+    }
+
+    /** The name the iPhone lists this phone under. Reading it needs the Bluetooth permission. */
+    @SuppressLint("MissingPermission") // checked just above the call
+    private fun bluetoothName(): String {
+        val canRead = IphoneLink.hasPermissions(activity)
+        val name = if (canRead) activity.getSystemService(BluetoothManager::class.java)?.adapter?.name else null
+        return name ?: Build.MODEL
     }
 
     // Deliberate: the app must keep listening during rides, which is the use case this exemption exists for. The app

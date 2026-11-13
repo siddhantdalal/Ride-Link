@@ -36,6 +36,8 @@
             android:layout_marginBottom="10dp"
             android:visibility="gone" />
 
+        <include layout="@layout/ride_again" />
+
         <include layout="@layout/ride_trip" />
     </LinearLayout>
 </FrameLayout>
