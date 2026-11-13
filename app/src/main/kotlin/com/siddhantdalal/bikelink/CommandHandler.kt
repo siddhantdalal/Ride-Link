@@ -1,6 +1,8 @@
 package com.siddhantdalal.bikelink
 
 import android.content.Context
+import android.os.Build
+import android.provider.Settings
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -31,6 +33,7 @@ class CommandHandler(private val context: Context, private val bikeCode: String)
     private fun navigate(body: String): HttpResponse {
         val input = destinationText(body) ?: return reply(400, "No destination was sent.")
         if (!GoogleMaps.isInstalled(context)) return reply(409, "Google Maps isn't installed on the bike phone.")
+        if (!canOpenMapsFromBackground()) return setupNeeded()
         return when (val result = DestinationParser.resolve(input, ShortLinkExpander::expand)) {
             is Unusable -> reply(422, result.reason)
             is Found -> {
@@ -50,6 +53,17 @@ class CommandHandler(private val context: Context, private val bikeCode: String)
         LaunchMapsActivity.showMaps(context)
         return reply(200, "Stopping the ride.")
     }
+
+    /**
+     * Android blocks background apps from opening other apps (Android 10+). The two exemptions that apply to us are the
+     * "Display over other apps" permission, or having an accessibility service turned on (the Maps helper). Without
+     * either, Maps silently wouldn't open, so the rider is told to finish setup instead.
+     */
+    private fun canOpenMapsFromBackground() =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || Settings.canDrawOverlays(context) || MapsHelperService.isEnabled
+
+    private fun setupNeeded() =
+        reply(409, "Finish setup on the bike phone: open Bike Link and allow \"Display over other apps\".")
 
     /** Accepts {"to": "..."}, or the destination as plain text. */
     private fun destinationText(body: String): String? {
