@@ -2,18 +2,37 @@
 <resources>
     <string name="app_name">Bike Link</string>
 
-    <string name="status_starting">Starting…</string>
-    <string name="status_ready_hotspot">✅ Ready: on your iPhone hotspot at %1$s, port %2$d</string>
-    <string name="status_other_network">⚠️ Connected to Wi-Fi (%1$s), but not to the iPhone hotspot. Join your iPhone\'s Personal Hotspot.</string>
-    <string name="status_no_wifi">⚠️ Not on Wi-Fi. Join your iPhone\'s Personal Hotspot.</string>
+    <!-- Status card -->
+    <string name="status_starting_title">Starting…</string>
+    <string name="status_starting_detail">Getting ready to listen for your iPhone.</string>
+    <string name="status_setup_title">Finish setup</string>
+    <string name="status_setup_detail">Complete the steps below so your iPhone can start rides.</string>
+    <string name="status_no_wifi_title">Join your iPhone\'s hotspot</string>
+    <string name="status_no_wifi_detail">Turn on Personal Hotspot on your iPhone, then connect this phone to it.</string>
+    <string name="status_other_network_title">On a different Wi-Fi</string>
+    <string name="status_other_network_detail">Connected to %1$s. Switch to your iPhone\'s Personal Hotspot to ride.</string>
+    <string name="status_ready_title">Ready to ride</string>
+    <string name="status_ready_detail">Linked to your iPhone · %1$s</string>
 
+    <!-- Last ride card -->
+    <string name="last_ride_label">Last ride</string>
+    <string name="last_ride_none_title">No rides yet</string>
+    <string name="last_ride_none_detail">Send a destination from your iPhone, and Google Maps opens here in two-wheeler mode.</string>
+    <string name="last_ride_navigating_detail">Sent %1$s · two-wheeler route</string>
+    <string name="last_ride_stopped_title">Ride stopped</string>
+
+    <!-- Bike code card -->
     <string name="bike_code_label">Bike code</string>
-    <string name="bike_code_hint">Enter this once in your iPhone Shortcuts. It makes sure only your iPhone can control this phone.</string>
+    <string name="bike_code_hint">Enter once in your iPhone Shortcuts</string>
 
-    <string name="setup_title">One-time setup</string>
+    <!-- Setup -->
+    <string name="setup_title">Setup</string>
+    <string name="setup_summary">Done: %1$d / %2$d</string>
+    <string name="setup_show">Setup</string>
+    <string name="setup_hide">Hide setup</string>
     <string name="step_allow">Allow</string>
     <string name="step_turn_on">Turn on</string>
-    <string name="step_done">Done ✓</string>
+    <string name="step_done_description">Done</string>
 
     <string name="step_overlay">Display over other apps</string>
     <string name="step_overlay_detail">Lets Bike Link open Google Maps when a destination arrives from your iPhone.</string>
@@ -27,9 +46,13 @@
     <string name="step_helper_detail">Taps \"Yes\" when you change destination mid-ride, and ends navigation when you send Stop Ride. In the list, open \"Bike Link – Maps helper\" and turn it on.</string>
     <string name="step_helper_detail_restricted">Taps \"Yes\" when you change destination mid-ride, and ends navigation when you send Stop Ride. In the list, open \"Bike Link – Maps helper\" and turn it on. If Android says it\'s a restricted setting: open App info for Bike Link, tap ⋮, choose \"Allow restricted settings\", then try again.</string>
 
+    <string name="footer">Bike Link keeps working in the background, so you can leave this screen.</string>
+
+    <!-- Maps helper (accessibility service) -->
     <string name="maps_helper_label">Bike Link – Maps helper</string>
     <string name="maps_helper_description">Taps Google Maps\' \"Yes\" button when you send a new destination mid-ride, and \"Close navigation\" when you send Stop Ride. It only acts for a few seconds after a command from your iPhone, only inside Google Maps, and reads nothing else.</string>
 
+    <!-- Notification -->
     <string name="notification_channel">Ride link</string>
     <string name="notification_title">Bike Link is ready</string>
     <string name="notification_text">Waiting for a destination from your iPhone.</string>

@@ -40,6 +40,7 @@ class CommandHandler(private val context: Context, private val bikeCode: String)
                 // If Maps is already navigating, it will ask "Exit navigation?". The helper answers it, if turned on.
                 MapsHelperService.request(MapsHelperService.Task.CONFIRM_NEW_ROUTE)
                 LaunchMapsActivity.navigate(context, result.destination.query)
+                RideLog.navigatingTo(context, result.destination.label)
                 reply(200, "Navigating to ${result.destination.label}.")
             }
         }
@@ -51,6 +52,7 @@ class CommandHandler(private val context: Context, private val bikeCode: String)
         }
         MapsHelperService.request(MapsHelperService.Task.STOP_NAVIGATION)
         LaunchMapsActivity.showMaps(context)
+        RideLog.stopped(context)
         return reply(200, "Stopping the ride.")
     }
 

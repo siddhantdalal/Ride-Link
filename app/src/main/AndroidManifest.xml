@@ -4,6 +4,8 @@
 
     <!-- Receive commands from the iPhone, and expand shared map links. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Lets the screen update its status live when the phone joins or leaves the iPhone hotspot. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Needed on Android 17 and newer to talk to the iPhone on the hotspot network. -->
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
 
