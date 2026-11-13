@@ -1,11 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Navigation arrow, kept inside the adaptive icon's 66dp safe zone. -->
+<!-- A motorbike with a dotted route leading to a location pin, inside the adaptive icon's 66dp safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- Route -->
+    <path
+        android:fillAlpha="0.8"
+        android:fillColor="#FFFFFF"
+        android:pathData="M25.1,50a1.9,1.9 0,1 0,3.8 0a1.9,1.9 0,1 0,-3.8 0 M29.1,43.5a1.9,1.9 0,1 0,3.8 0a1.9,1.9 0,1 0,-3.8 0 M35.1,39a1.9,1.9 0,1 0,3.8 0a1.9,1.9 0,1 0,-3.8 0 M42.1,37a1.9,1.9 0,1 0,3.8 0a1.9,1.9 0,1 0,-3.8 0 M49.1,38a1.9,1.9 0,1 0,3.8 0a1.9,1.9 0,1 0,-3.8 0 M55.6,41a1.9,1.9 0,1 0,3.8 0a1.9,1.9 0,1 0,-3.8 0 M61.1,45a1.9,1.9 0,1 0,3.8 0a1.9,1.9 0,1 0,-3.8 0" />
+
+    <!-- Location pin -->
+    <path
+        android:fillColor="#FFC107"
+        android:fillType="evenOdd"
+        android:pathData="M69,47C69,47 62,39.5 62,33A7,7 0,1 1,76 33C76,39.5 69,47 69,47Z M71.6,33A2.6,2.6 0,1 0,66.4 33A2.6,2.6 0,1 0,71.6 33Z" />
+
+    <!-- Wheels, swingarm and fork -->
+    <path
+        android:pathData="M29.5,71a7.5,7.5 0,1 0,15 0a7.5,7.5 0,1 0,-15 0 M57.5,71a7.5,7.5 0,1 0,15 0a7.5,7.5 0,1 0,-15 0 M37,71L46,65 M65,71L59.5,53.5"
+        android:strokeWidth="3.2"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Handlebar -->
+    <path
+        android:pathData="M56.5,50.5L62,51.5"
+        android:strokeWidth="3"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round" />
+
+    <!-- Seat and tank, engine, headlight, wheel hubs -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,32 L72,76 L54,67 L36,76 Z" />
+        android:pathData="M30.5,59.5L43,57C45,52.5 51,51 57.5,52.5L60.5,56L57,60.5L44,61.5Z M44.5,60L57,59.5L55.5,67L46.5,67.5Z M61.3,57a2.3,2.3 0,1 0,4.6 0a2.3,2.3 0,1 0,-4.6 0 M35.4,71a1.6,1.6 0,1 0,3.2 0a1.6,1.6 0,1 0,-3.2 0 M63.4,71a1.6,1.6 0,1 0,3.2 0a1.6,1.6 0,1 0,-3.2 0" />
 </vector>
