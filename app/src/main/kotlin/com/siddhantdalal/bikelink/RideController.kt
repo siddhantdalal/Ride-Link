@@ -65,7 +65,6 @@ class RideController(
     fun start(command: Intent?) {
         waiting = command
         styleMap()
-        followRider()
         NavInfoFeed.addListener(turnListener)
         message = activity.getString(R.string.ride_starting)
         publish()
@@ -78,6 +77,8 @@ class RideController(
                 )
                 ready.addRemainingTimeOrDistanceChangedListener(TRIP_UPDATE_SECONDS, TRIP_UPDATE_METERS, tripListener)
                 ready.addArrivalListener(arrivalListener)
+                // Following the rider needs a ready navigator: asking earlier crashes inside the SDK (seen on device).
+                followRider()
                 message = null
                 publish()
                 waiting?.let(::handle)
